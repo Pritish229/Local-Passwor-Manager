@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="no-referrer">
+    <title>VaultKey — Secure Share</title>
+    <style>
+        :root {
+            --bg-page: #09090b;
+            --bg-card: #121215;
+            --bg-card-subtle: #18181c;
+            --bg-elevated: #202026;
+            --bg-hover: #282830;
+            --border: #27272e;
+            --border-strong: #3e3e48;
+            --text-primary: #f4f4f6;
+            --text-secondary: #a0a0ab;
+            --text-muted: #6e6e7a;
+            --accent: #ffffff;
+            --accent-text: #09090b;
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.12);
+            --danger-border: rgba(239, 68, 68, 0.3);
+            --success: #10b981;
+            --success-bg: rgba(16, 185, 129, 0.12);
+            --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-page);
+            color: var(--text-primary);
+            font-family: var(--font-sans);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 16px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .viewer-container {
+            width: 100%;
+            max-width: 440px;
+            background-color: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.6);
+            overflow: hidden;
+            animation: cardAppear 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes cardAppear {
+            from { opacity: 0; transform: translateY(10px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .viewer-header {
+            padding: 20px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: linear-gradient(180deg, var(--bg-card-subtle) 0%, var(--bg-card) 100%);
+        }
+
+        .brand-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-icon {
+            width: 32px;
+            height: 32px;
+            background-color: var(--accent);
+            color: var(--accent-text);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .brand-name {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+
+        .brand-sub {
+            font-size: 10.5px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-weight: 600;
+        }
+
+        .timer-badge {
+            font-size: 11.5px;
+            font-weight: 600;
+            padding: 4px 10px;
+            background-color: var(--bg-card-subtle);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .timer-dot {
+            width: 7px;
+            height: 7px;
+            background-color: #eab308;
+            border-radius: 50%;
+            animation: pulseDot 2s infinite ease-in-out;
+        }
+
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.85); }
+        }
+
+        .viewer-body {
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+
+        .loading-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 12px;
+            gap: 14px;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-card {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 24px 14px;
+            gap: 12px;
+        }
+
+        .error-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background-color: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .error-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .error-description {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            line-height: 1.45;
+        }
+
+        .target-card {
+            background-color: var(--bg-card-subtle);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .target-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .target-uname {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+
+        .pin-form-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            text-align: center;
+        }
+
+        .pin-label {
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .pin-inputs-row {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .pin-digit {
+            width: 52px;
+            height: 56px;
+            font-family: var(--font-mono);
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+            background-color: var(--bg-elevated);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            outline: none;
+            transition: all 0.15s ease;
+        }
+
+        .pin-digit:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.12);
+            background-color: var(--bg-card-subtle);
+        }
+
+        .alert-banner {
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            line-height: 1.4;
+            display: none;
+            text-align: center;
+        }
+
+        .alert-banner.error {
+            display: block;
+            background-color: var(--danger-bg);
+            border: 1px solid var(--danger-border);
+            color: #f87171;
+        }
+
+        .btn-unlock {
+            height: 42px;
+            background-color: var(--accent);
+            color: var(--accent-text);
+            border: none;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-unlock:hover {
+            opacity: 0.92;
+        }
+
+        .revealed-section {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .burned-badge {
+            background-color: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #f87171;
+            padding: 9px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .field-card {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .field-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+        }
+
+        .field-row {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-card-subtle);
+            border: 1px solid var(--border);
+            border-radius: 7px;
+            padding: 8px 12px;
+            gap: 8px;
+        }
+
+        .field-val-text {
+            font-family: var(--font-mono);
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .field-val-text.masked {
+            letter-spacing: 0.22em;
+            font-size: 15px;
+            user-select: none;
+        }
+
+        .action-btn {
+            background-color: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            border-radius: 5px;
+            padding: 5px 9px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.15s ease;
+            white-space: nowrap;
+        }
+
+        .action-btn:hover {
+            color: var(--text-primary);
+            border-color: var(--border-strong);
+            background-color: var(--bg-hover);
+        }
+
+        .action-btn.primary {
+            background-color: var(--accent);
+            color: var(--accent-text);
+            border-color: transparent;
+        }
+
+        .viewer-footer {
+            padding: 12px 22px;
+            border-top: 1px solid var(--border);
+            font-size: 11px;
+            color: var(--text-muted);
+            text-align: center;
+            background-color: var(--bg-card-subtle);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="viewer-container">
+        <div class="viewer-header">
+            <div class="brand-badge">
+                <div class="brand-icon">
+                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                </div>
+                <div>
+                    <div class="brand-name">VaultKey</div>
+                    <div class="brand-sub">Secure Share</div>
+                </div>
+            </div>
+
+            <div class="timer-badge" id="timerBadge">
+                <span class="timer-dot"></span>
+                <span id="countdownText">10:00</span>
+            </div>
+        </div>
+
+        <div class="viewer-body">
+            <div class="loading-state" id="loadingState">
+                <div class="spinner"></div>
+                <div class="loading-text">Loading shared credential...</div>
+            </div>
+
+            <div class="error-card" id="errorCard">
+                <div class="error-icon">&#10006;</div>
+                <div class="error-title" id="errorTitle">Unable to Load Share</div>
+                <div class="error-description" id="errorDesc">
+                    The requested share link is invalid, expired, or has already been burned.
+                </div>
+            </div>
+
+            <div class="pin-form-section" id="pinFormSection" style="display: none;">
+                <div class="target-card">
+                    <div class="target-title" id="shareTargetTitle">Protected Credential</div>
+                    <div class="target-uname" id="shareTargetUname">Loading shared account...</div>
+                </div>
+
+                <div>
+                    <label class="pin-label">Enter 4-Digit Security Code</label>
+                    <div class="pin-inputs-row" style="margin-top: 10px;">
+                        <input type="text" class="pin-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="d1" autofocus autocomplete="off">
+                        <input type="text" class="pin-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="d2" autocomplete="off">
+                        <input type="text" class="pin-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="d3" autocomplete="off">
+                        <input type="text" class="pin-digit" maxlength="1" inputmode="numeric" pattern="[0-9]*" id="d4" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="alert-banner" id="errorBanner"></div>
+
+                <button type="button" class="btn-unlock" id="unlockBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
+                    </svg>
+                    Unlock Password
+                </button>
+            </div>
+
+            <div class="revealed-section" id="revealedSection">
+                <div class="burned-badge">
+                    🔥 <strong>One-time view:</strong> This credential has been revealed and the link is now burned and permanently destroyed.
+                </div>
+
+                <div class="field-card" id="revealedTitleCard">
+                    <label class="field-label">Service / Title</label>
+                    <div class="field-row">
+                        <span class="field-val-text" id="revealedTitle"></span>
+                    </div>
+                </div>
+
+                <div class="field-card" id="revealedUnameCard">
+                    <label class="field-label">Username / Account</label>
+                    <div class="field-row">
+                        <span class="field-val-text" id="revealedUname"></span>
+                        <button class="action-btn" id="copyUnameBtn">Copy</button>
+                    </div>
+                </div>
+
+                <div class="field-card" id="revealedPasswordCard">
+                    <label class="field-label">Password</label>
+                    <div class="field-row">
+                        <span class="field-val-text masked" id="revealedPassword">••••••••••••</span>
+                        <button class="action-btn" id="toggleRevealPwBtn">Show</button>
+                        <button class="action-btn primary" id="copyPasswordBtn">Copy</button>
+                    </div>
+                </div>
+
+                <div id="revealedCustomFields" style="display: flex; flex-direction: column; gap: 12px;"></div>
+            </div>
+        </div>
+
+        <div class="viewer-footer">
+            End-to-End Encrypted &bull; 4-Digit PIN Protected &bull; VaultKey
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        "use strict";
+
+        const digits = [document.getElementById("d1"), document.getElementById("d2"), document.getElementById("d3"), document.getElementById("d4")];
+        const unlockBtn = document.getElementById("unlockBtn");
+        const errorBanner = document.getElementById("errorBanner");
+        const countdownText = document.getElementById("countdownText");
+
+        let token = window.location.pathname.split("/").filter(Boolean).pop();
+        if (token === "share.html" || !token) {
+            const hash = window.location.hash.replace("#", "");
+            if (hash.includes("shareId=")) token = new URLSearchParams(hash).get("shareId");
+            else if (hash) token = hash;
+        }
+
+        let remainingSeconds = 600;
+        let timerInterval = null;
+        let shareSalt = "";
+        let decryptedData = null;
+        let isPasswordShown = false;
+
+        digits.forEach((d, idx) => {
+            d.addEventListener("input", (e) => {
+                const val = e.target.value.replace(/[^0-9]/g, "");
+                e.target.value = val ? val[0] : "";
+                if (val && idx < 3) digits[idx + 1].focus();
+                if (getEnteredCode().length === 4) unlockCredential();
+            });
+
+            d.addEventListener("keydown", (e) => {
+                if (e.key === "Backspace" && !d.value && idx > 0) digits[idx - 1].focus();
+                if (e.key === "Enter") unlockCredential();
+            });
+        });
+
+        function getEnteredCode() {
+            return digits.map(d => d.value).join("");
+        }
+
+        function showPinError(msg) {
+            errorBanner.textContent = msg;
+            errorBanner.className = "alert-banner error";
+        }
+
+        function base64ToUint8(str) {
+            let b64 = str.replace(/-/g, "+").replace(/_/g, "/");
+            while (b64.length % 4 !== 0) b64 += "=";
+            const bin = atob(b64);
+            const bytes = new Uint8Array(bin.length);
+            for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+            return bytes;
+        }
+
+        function updateCountdownUI() {
+            const m = Math.floor(Math.max(0, remainingSeconds) / 60);
+            const s = Math.max(0, remainingSeconds) % 60;
+            countdownText.textContent = `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+        }
+
+        async function loadInfo() {
+            if (!token) {
+                document.getElementById("loadingState").style.display = "none";
+                document.getElementById("errorCard").style.display = "flex";
+                return;
+            }
+
+            try {
+                // Try both /shares/:token and /api/share/info/:token
+                let res = await fetch(`/shares/${token}`).catch(() => null);
+                if (!res || !res.ok) {
+                    res = await fetch(`/api/share/info/${token}`);
+                }
+                const data = await res.json();
+                if (!res.ok) {
+                    document.getElementById("loadingState").style.display = "none";
+                    document.getElementById("errorCard").style.display = "flex";
+                    document.getElementById("errorDesc").textContent = data.error || "Link has expired or was already burned.";
+                    return;
+                }
+
+                shareSalt = data.salt || "";
+                document.getElementById("shareTargetTitle").textContent = data.title || "Protected Credential";
+                document.getElementById("shareTargetUname").textContent = data.uname ? `Account: ${data.uname}` : "No username specified";
+
+                document.getElementById("loadingState").style.display = "none";
+                document.getElementById("pinFormSection").style.display = "flex";
+
+                remainingSeconds = data.remainingSeconds || data.expires_in || 600;
+                updateCountdownUI();
+                timerInterval = setInterval(() => {
+                    remainingSeconds--;
+                    updateCountdownUI();
+                    if (remainingSeconds <= 0) {
+                        clearInterval(timerInterval);
+                        showPinError("Link has expired.");
+                        unlockBtn.disabled = true;
+                    }
+                }, 1000);
+
+                digits[0].focus();
+            } catch (err) {
+                document.getElementById("loadingState").style.display = "none";
+                document.getElementById("errorCard").style.display = "flex";
+            }
+        }
+
+        async function unlockCredential() {
+            const code = getEnteredCode();
+            if (code.length < 4) {
+                showPinError("Please enter all 4 digits.");
+                return;
+            }
+
+            unlockBtn.disabled = true;
+            unlockBtn.innerHTML = "Verifying...";
+            errorBanner.className = "alert-banner";
+
+            try {
+                let res = await fetch(`/shares/${token}/unlock`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ pin: code })
+                }).catch(() => null);
+
+                if (!res || !res.ok) {
+                    res = await fetch("/api/share/unlock", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token, code, pin: code })
+                    });
+                }
+
+                const data = await res.json();
+                if (!res.ok) {
+                    showPinError(data.error || "Incorrect 4-digit code.");
+                    unlockBtn.disabled = false;
+                    unlockBtn.innerHTML = "Unlock Password";
+                    digits.forEach(d => d.value = "");
+                    digits[0].focus();
+                    return;
+                }
+
+                // If payload is encrypted with PBKDF2(pin, salt)
+                if (data.ciphertext && (data.salt || shareSalt)) {
+                    const saltBytes = base64ToUint8(data.salt || shareSalt);
+                    const pinKey = await window.crypto.subtle.importKey(
+                        "raw",
+                        new TextEncoder().encode(code),
+                        { name: "PBKDF2" },
+                        false,
+                        ["deriveKey"]
+                    );
+                    const aesKey = await window.crypto.subtle.deriveKey(
+                        { name: "PBKDF2", salt: saltBytes, iterations: 100000, hash: "SHA-256" },
+                        pinKey,
+                        { name: "AES-GCM", length: 256 },
+                        false,
+                        ["decrypt"]
+                    );
+                    const decryptedBuffer = await window.crypto.subtle.decrypt(
+                        { name: "AES-GCM", iv: base64ToUint8(data.iv) },
+                        aesKey,
+                        base64ToUint8(data.ciphertext)
+                    );
+                    decryptedData = JSON.parse(new TextDecoder().decode(decryptedBuffer));
+                } else {
+                    decryptedData = {
+                        title: data.title,
+                        uname: data.uname,
+                        password: data.password,
+                        custom_fields: data.custom_fields || []
+                    };
+                }
+
+                // Show revealed section
+                if (timerInterval) clearInterval(timerInterval);
+                countdownText.textContent = "BURNED";
+                document.getElementById("pinFormSection").style.display = "none";
+                document.getElementById("revealedSection").style.display = "flex";
+
+                document.getElementById("revealedTitle").textContent = decryptedData.title || data.title || "Credential";
+                document.getElementById("revealedUname").textContent = decryptedData.uname || data.uname || "-";
+                document.getElementById("revealedPassword").textContent = "••••••••••••";
+
+                document.getElementById("copyUnameBtn").onclick = () => {
+                    navigator.clipboard.writeText(decryptedData.uname || data.uname || "");
+                    document.getElementById("copyUnameBtn").textContent = "Copied!";
+                    setTimeout(() => document.getElementById("copyUnameBtn").textContent = "Copy", 1800);
+                };
+
+                const toggleBtn = document.getElementById("toggleRevealPwBtn");
+                const pwField = document.getElementById("revealedPassword");
+                toggleBtn.onclick = () => {
+                    isPasswordShown = !isPasswordShown;
+                    pwField.textContent = isPasswordShown ? decryptedData.password : "••••••••••••";
+                    pwField.classList.toggle("masked", !isPasswordShown);
+                    toggleBtn.textContent = isPasswordShown ? "Hide" : "Show";
+                };
+
+                document.getElementById("copyPasswordBtn").onclick = () => {
+                    navigator.clipboard.writeText(decryptedData.password || "");
+                    document.getElementById("copyPasswordBtn").textContent = "Copied!";
+                    setTimeout(() => document.getElementById("copyPasswordBtn").textContent = "Copy", 1800);
+                };
+            } catch (err) {
+                console.error("Unlock error:", err);
+                showPinError("Error unlocking credential. Please try again.");
+                unlockBtn.disabled = false;
+                unlockBtn.innerHTML = "Unlock Password";
+            }
+        }
+
+        unlockBtn.addEventListener("click", unlockCredential);
+        loadInfo();
+    })();
+    </script>
+</body>
+</html>

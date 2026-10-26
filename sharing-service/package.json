@@ -1,0 +1,17 @@
+{
+  "name": "vaultkey-share-api",
+  "version": "1.0.0",
+  "description": "Zero-Knowledge Cross-Device Password Sharing API for VaultKey",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "kv:create": "wrangler kv:namespace create SHARES_KV",
+    "kv:create:preview": "wrangler kv:namespace create SHARES_KV --preview"
+  },
+  "devDependencies": {
+    "wrangler": "^3.111.0"
+  }
+}

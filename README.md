@@ -1,20 +1,27 @@
-# Command-Line Password Manager
+# VaultKey — Secure Offline Password Manager
 
-A secure, offline, command-line password manager written in Python. This application allows you to store and manage your passwords securely on your local machine. 
-
-## The goal of this project was 
-
-### A. Slove an issue of mine to store passwords. 
-### B. Practice the python concepts I have learned over last couple months.
+A secure, offline, production-grade password manager written in Python. Now features a **modern B2B SaaS web interface** alongside the traditional command-line interface, storing all your encrypted credentials securely on your local machine.
 
 ## Features
 
-- **Secure Authentication**: Uses a master password with strong Argon2 hashing to protect your vault.
-- **End-to-End Encryption**: All stored passwords are encrypted using Fernet (AES 128) encryption.
-- **Robust Account Recovery**: Features a secure, two-lock system. If you forget your master password, you can recover your vault using a one-time recovery key that you control.
-- **Interactive UI**: Utilizes clean, interactive command-line menus for adding, viewing, and editing password entries.
-- **Fluid Navigation**: Easily browse credentials by category and perform multiple actions without returning to the main menu.
-- **Fully Offline**: No network connection is required. All your data stays on your machine.
+- **Modern SaaS Dashboard**: Clean, production-grade flat UI with **Zero Gradients**, **Zero Shadows**, crisp 1px borders, and **Dark/Light Mode** support.
+- **Recent Password Uses**: Fast-access strip tracking recent copy & view activity with instant 1-click clipboard actions.
+- **1-Click Clipboard Copy**: One-click copy buttons for both Username and Password with instant visual feedback and toast confirmation.
+- **Custom Fields**: Save anything else per entry (PIN, Secret Notes, Recovery Codes, API Keys, URLs) with optional secret masking.
+- **High-Entropy Password Generator**: Built-in cryptographic generator with customizable length, symbols, and strength meter.
+- **End-to-End Local Encryption**: Fernet (AES-128) encryption and Argon2id master password verification.
+- **Robust Account Recovery**: Emergency recovery key allows restoring access if master password is forgotten.
+- **Fully Offline**: Zero external network calls. All data resides solely in local encrypted JSON files.
+
+## Launching the SaaS Web UI
+
+To launch the modern SaaS dashboard, run:
+```bash
+python app.py
+```
+This automatically opens your default browser at `http://127.0.0.1:5432`.
+
+---
 
 ## Setup Instructions
 

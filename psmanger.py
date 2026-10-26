@@ -25,8 +25,17 @@ custom_style = Style([
 ])
 
 ph = PasswordHasher()
-master_path = Path("master.json")
-store_path = Path("store.json")
+
+# Base directory determination for both Python script and PyInstaller executable
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys.executable).resolve().parent
+else:
+    BASE_DIR = Path(__file__).resolve().parent
+
+# Check if files exist in CWD first, otherwise use BASE_DIR
+master_path = Path("master.json") if Path("master.json").is_file() and not (BASE_DIR / "master.json").is_file() else BASE_DIR / "master.json"
+store_path = Path("store.json") if Path("store.json").is_file() and not (BASE_DIR / "store.json").is_file() else BASE_DIR / "store.json"
+
 
 
 # -------- Supporting function for creating vault key --------
@@ -125,17 +134,18 @@ def add_entry(cat,uname,pw,vFernet):
     
     with open(store_path,"w+") as f:
         json.dump(store,f,indent=4)
-    print(f"{cat}, Entry added Successfully")
+    print(f"\n✅ Entry for '{uname}' in '{cat}' added successfully!")
+    questionary.press_any_key_to_continue(style=custom_style).ask()
 
 def add_entry_interactive(vFernet):
     """Interactively prompts the user to add a new password entry."""
     store = load_file(store_path)
     existing_categories = list(store.keys())
     print("\n--- Add New Password ---")
-    if existing_categories is None:
+    if not existing_categories:
         cat = questionary.text(
-            'Enter category (or select an existing one):',
-            validate=lambda text: True if len(text) > 0 else "Category cannot be empty.",
+            'Enter category:',
+            validate=lambda text: True if len(text.strip()) > 0 else "Category cannot be empty.",
             style=custom_style,
             qmark='→'
         ).ask()
@@ -143,20 +153,22 @@ def add_entry_interactive(vFernet):
         cat = questionary.autocomplete(
             'Enter category (or select an existing one):',
             choices=existing_categories,
-            validate=lambda text: True if len(text) > 0 else "Category cannot be empty.",
+            validate=lambda text: True if len(text.strip()) > 0 else "Category cannot be empty.",
             style=custom_style,
             qmark='→'
         ).ask()
         
     if cat is None: return
+    cat = cat.strip()
 
     uname = questionary.text(
         'Enter username:',
-        validate=lambda text: True if len(text) > 0 else "Username cannot be empty.",
+        validate=lambda text: True if len(text.strip()) > 0 else "Username cannot be empty.",
         style=custom_style,
         qmark='→'
     ).ask()
     if uname is None: return
+    uname = uname.strip()
 
     pw = questionary.password(
         'Enter password:',
@@ -429,54 +441,58 @@ def main_menu(vault_fernet, master_data):
     return True
 
 
-# ------ Main Flow ------- 
-if not master_path.is_file():
-    print("----- Welcome to CMD Password manager ----- \n")
-    pw = getpass("Create master Password: ")
-    user_reg(pw)
-    print("Vault generated, please restart the script.")
-    input("Press any key to Exit...")
-    sys.exit()
-
-# --- Authentication Loop ---
-master_data_main = None
-if master_path.is_file():
-    with open(master_path, "r") as f:
-        master_data_main = json.load(f)
-
-    auth_choice = questionary.select(
-        "Welcome back! Please choose an option:",
-        choices=["Log In", "Forgot Master Password"],
-        style=custom_style,
-        qmark='→',
-        pointer='▶'
-    ).ask()
-    
-    if auth_choice is None:
-        sys.exit()
-    elif auth_choice == "Forgot Master Password":
-        recover_account()
-
-attempt = 3
-vault_fernet = None
-while attempt > 0:
-    authPass = getpass("Please enter your master password: ")
-    vault_fernet = user_Auth(master_path, authPass)
-    if vault_fernet:
-        break
-    
-    attempt -= 1
-    if attempt > 0:
-        print(f'Authentication failed. Attempts left: {attempt}')
-    else:
-        print("Too many failed attempts, terminating script.")
+def main():
+    # ------ Main Flow ------- 
+    if not master_path.is_file():
+        print("----- Welcome to CMD Password manager ----- \n")
+        pw = getpass("Create master Password: ")
+        user_reg(pw)
+        print("Vault generated, please restart the script.")
+        input("Press any key to Exit...")
         sys.exit()
 
-# --- Main Application Loop ---
-print("\nVault Unlocked - Welcome!")
-while True:
-    should_continue = main_menu(vault_fernet, master_data_main)
-    if not should_continue:
-        break
+    # --- Authentication Loop ---
+    master_data_main = None
+    if master_path.is_file():
+        with open(master_path, "r") as f:
+            master_data_main = json.load(f)
 
-print("Exiting. Goodbye!")
+        auth_choice = questionary.select(
+            "Welcome back! Please choose an option:",
+            choices=["Log In", "Forgot Master Password"],
+            style=custom_style,
+            qmark='→',
+            pointer='▶'
+        ).ask()
+        
+        if auth_choice is None:
+            sys.exit()
+        elif auth_choice == "Forgot Master Password":
+            recover_account()
+
+    attempt = 3
+    vault_fernet = None
+    while attempt > 0:
+        authPass = getpass("Please enter your master password: ")
+        vault_fernet = user_Auth(master_path, authPass)
+        if vault_fernet:
+            break
+        
+        attempt -= 1
+        if attempt > 0:
+            print(f'Authentication failed. Attempts left: {attempt}')
+        else:
+            print("Too many failed attempts, terminating script.")
+            sys.exit()
+
+    # --- Main Application Loop ---
+    print("\nVault Unlocked - Welcome!")
+    while True:
+        should_continue = main_menu(vault_fernet, master_data_main)
+        if not should_continue:
+            break
+
+    print("Exiting. Goodbye!")
+
+if __name__ == "__main__":
+    main()

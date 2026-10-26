@@ -1,0 +1,40 @@
+{
+    "layout": "sidebar",
+    "theme": "light",
+    "view_mode": "grid",
+    "sidebar_collapsed": false,
+    "button_colors": {
+        "dark": {
+            "primary_bg": "#ffffff",
+            "primary_text": "#111111",
+            "secondary_bg": "#262626",
+            "secondary_text": "#ffffff",
+            "primary_hover": "#e4e4e7",
+            "secondary_hover": "#3f3f46",
+            "accent": "#ffffff"
+        },
+        "light": {
+            "primary_bg": "#18181b",
+            "primary_text": "#ffffff",
+            "secondary_bg": "#f4f4f5",
+            "secondary_text": "#18181b",
+            "primary_hover": "#27272a",
+            "secondary_hover": "#e4e4e7",
+            "accent": "#18181b"
+        }
+    },
+    "shortcuts": {
+        "command_palette": "Ctrl+K",
+        "settings": "Ctrl+,",
+        "toggle_layout": "Ctrl+Shift+L",
+        "toggle_theme": "Ctrl+Shift+D",
+        "shortcuts_modal": "Ctrl+/",
+        "new_category": "Ctrl+Shift+F",
+        "new_password": "Ctrl+Shift+M",
+        "quick_generator": "Ctrl+Shift+G"
+    },
+    "sharing": {
+        "api_url": "https://vaultkey-share-api.pritishdash44.workers.dev",
+        "viewer_url": "https://vaultkey-secret.pages.dev"
+    }
+}

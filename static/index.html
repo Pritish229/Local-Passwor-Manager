@@ -1,0 +1,1700 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VaultKey — Modern Offline Password Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- App Container -->
+    <div id="app" class="app-root">
+
+        <!-- Top Navigation Bar -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <div class="brand">
+                    <span class="brand-icon">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                    </span>
+                    <span class="brand-title">VaultKey</span>
+                    <span class="brand-badge">Offline B2B Vault</span>
+                </div>
+            </div>
+
+            <div class="topbar-center">
+                <div class="search-box">
+                    <svg class="search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="globalSearch" placeholder="Search passwords, accounts, categories... (Ctrl + K)" autocomplete="off">
+                    <kbd class="kbd-shortcut">/</kbd>
+                </div>
+            </div>
+
+            <div class="topbar-right">
+                <div class="header-stats">
+                    <span class="stat-pill"><strong id="statTotalCount">0</strong> credentials</span>
+                </div>
+
+                <!-- Layout Toggle Button -->
+                <button id="layoutToggleBtn" class="btn btn-icon" title="Toggle Layout (Ctrl + Shift + L)" aria-label="Toggle Layout">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="9" y1="3" x2="9" y2="21"></line>
+                    </svg>
+                </button>
+
+                <!-- Theme Switcher -->
+                <button id="themeToggleBtn" class="btn btn-icon" title="Toggle Dark / Light Mode (Ctrl + Shift + D)" aria-label="Toggle Theme">
+                    <span class="theme-icon-light">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                    </span>
+                    <span class="theme-icon-dark">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                        </svg>
+                    </span>
+                </button>
+
+                <!-- Shortcuts Help -->
+                <button id="shortcutsHelpBtn" class="btn btn-icon" title="Keyboard Shortcuts (Ctrl + /)" aria-label="Keyboard Shortcuts">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                        <line x1="6" y1="8" x2="6.01" y2="8"></line>
+                        <line x1="10" y1="8" x2="10.01" y2="8"></line>
+                        <line x1="14" y1="8" x2="14.01" y2="8"></line>
+                        <line x1="18" y1="8" x2="18.01" y2="8"></line>
+                        <line x1="6" y1="12" x2="6.01" y2="12"></line>
+                        <line x1="18" y1="12" x2="18.01" y2="12"></line>
+                        <line x1="7" y1="16" x2="17" y2="16"></line>
+                    </svg>
+                </button>
+
+                <!-- Generator Quick Launch -->
+                <button id="quickGenBtn" class="btn btn-secondary btn-sm" title="Password Generator (Ctrl + Shift + G)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                        <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                    </svg>
+                    Generate
+                </button>
+
+                <!-- Settings Button -->
+                <button id="openSettingsBtn" class="btn btn-secondary btn-sm" title="Settings (Ctrl + ,)">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                    </svg>
+                    Settings
+                </button>
+
+                <!-- Lock Vault -->
+                <button id="lockVaultBtn" class="btn btn-secondary btn-sm" title="Lock Vault Session">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    Lock Vault
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace Layout -->
+        <div class="workspace">
+
+            <!-- Sidebar -->
+            <aside class="sidebar">
+                <!-- Sidebar Top Brand Header (Active in Sidebar Workspace Layout) -->
+                <div class="sidebar-brand-header">
+                    <div class="brand">
+                        <span class="brand-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </span>
+                        <div class="brand-text-wrap">
+                            <span class="brand-title">VaultKey</span>
+                            <span class="brand-badge-sub">Workspace</span>
+                        </div>
+                    </div>
+                    <button id="sidebarCollapseBtn" class="btn btn-icon btn-xs sidebar-toggle-btn" title="Toggle Sidebar (Expand/Collapse)" aria-label="Toggle Sidebar">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-label">Vault Views</div>
+                    <ul class="nav-list">
+                        <li>
+                            <button class="nav-item active" data-filter="all" title="All Passwords">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                <span>All Passwords</span>
+                                <span class="nav-count" id="countAll">0</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" data-filter="recent" title="Recently Used">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <polyline points="12 6 12 12 16 14"></polyline>
+                                </svg>
+                                <span>Recently Used</span>
+                                <span class="nav-count" id="countRecent">0</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-section">
+                    <div class="sidebar-header-row">
+                        <div class="sidebar-label">Categories</div>
+                        <div class="sidebar-cat-actions">
+                            <span class="sidebar-sub" id="countCategories">0</span>
+                            <button id="sidebarAddCatBtn" class="btn btn-icon btn-xs" title="New Category (Ctrl+Shift+F)" aria-label="New Category">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="sidebar-cat-search-wrap" id="sidebarCatSearchWrap">
+                        <input type="text" id="sidebarCatSearchInput" class="sidebar-cat-search-input" placeholder="Search categories..." autocomplete="off">
+                    </div>
+                    <div class="sidebar-cat-scroll-container" id="sidebarCatScrollContainer">
+                        <ul class="nav-list" id="categoryNavList">
+                            <!-- Dynamic Categories with drag-and-drop & edit/delete support -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Tools & Shortcuts Section -->
+                <div class="sidebar-section">
+                    <div class="sidebar-label">Tools & Preferences</div>
+                    <ul class="nav-list">
+                        <li>
+                            <button class="nav-item" id="sidebarGenNavBtn" title="Password Generator (Ctrl+Shift+G)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                    <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                                    <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+                                </svg>
+                                <span>Generator</span>
+                                <span class="nav-shortcut-badge">Ctrl+Shift+G</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" id="sidebarPaletteNavBtn" title="Command Palette (Ctrl+K)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                <span>Command Palette</span>
+                                <span class="nav-shortcut-badge">Ctrl+K</span>
+                            </button>
+                        </li>
+                        <li>
+                            <button class="nav-item" id="sidebarSettingsNavBtn" title="Settings (Ctrl+,)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                                <span>Settings</span>
+                                <span class="nav-shortcut-badge">Ctrl+,</span>
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="sidebar-footer">
+                    <div class="vault-security-pill">
+                        <span class="status-dot"></span>
+                        <div class="security-info">
+                            <span class="security-title">AES-128 & Argon2id</span>
+                            <span class="security-meta">Local Encrypted Store</span>
+                        </div>
+                    </div>
+                    <div class="sidebar-quick-actions">
+                        <button id="sidebarThemeToggleBtn" class="btn btn-icon btn-xs" title="Toggle Dark/Light Mode (Ctrl+Shift+D)" aria-label="Toggle Theme">
+                            <span class="theme-icon-light">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="5"></circle>
+                                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                                </svg>
+                            </span>
+                            <span class="theme-icon-dark">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                                </svg>
+                            </span>
+                        </button>
+                        <button id="sidebarLayoutToggleBtn" class="btn btn-icon btn-xs" title="Toggle Layout (Ctrl+Shift+L)" aria-label="Toggle Layout">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="9" y1="3" x2="9" y2="21"></line>
+                            </svg>
+                        </button>
+                        <button id="sidebarLockVaultBtn" class="btn btn-icon btn-xs" title="Lock Vault Session" aria-label="Lock Vault">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- SaaS Navigation Tab Bar (Active in SaaS Layout - Layout Option 2) -->
+            <nav class="saas-tab-bar" id="saasTabBar" aria-label="SaaS Navigation Tabs">
+                <div class="saas-tab-group saas-primary-tabs">
+                    <button type="button" class="saas-tab active" data-tab-filter="all" id="saasTabAll">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                        <span>All Passwords</span>
+                        <span class="saas-tab-badge" id="saasCountAll">0</span>
+                    </button>
+                    <button type="button" class="saas-tab" data-tab-filter="recent" id="saasTabRecent">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Recently Used</span>
+                        <span class="saas-tab-badge" id="saasCountRecent">0</span>
+                    </button>
+                </div>
+
+                <div class="saas-tab-divider"></div>
+
+                <div class="saas-categories-scroll-wrapper" id="saasCategoriesScrollWrapper">
+                    <button type="button" class="saas-scroll-btn saas-scroll-left hidden" id="saasScrollLeftBtn" title="Scroll categories left" aria-label="Scroll left">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <div class="saas-tab-group saas-category-tabs" id="saasCategoryTabs">
+                        <!-- Dynamic Category Tabs -->
+                    </div>
+                    <button type="button" class="saas-scroll-btn saas-scroll-right hidden" id="saasScrollRightBtn" title="Scroll categories right" aria-label="Scroll right">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <div class="saas-more-cats-container hidden" id="saasMoreCatsContainer">
+                    <button type="button" class="saas-tab saas-more-tab" id="saasMoreCatsBtn" aria-haspopup="true" title="All Categories & Quick Switch">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        <span>All (<span id="saasMoreCount">0</span>)</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="saas-more-dropdown hidden" id="saasMoreCatsDropdown">
+                        <div class="saas-dropdown-header">
+                            <span class="saas-dropdown-title">Categories</span>
+                            <span class="saas-dropdown-badge" id="saasDropdownTotalBadge">0</span>
+                        </div>
+                        <div class="saas-dropdown-search">
+                            <input type="text" id="saasCatSearchInput" placeholder="Filter categories..." autocomplete="off">
+                        </div>
+                        <div class="saas-dropdown-list" id="saasMoreCatsList">
+                            <!-- Dynamic overflow categories -->
+                        </div>
+                    </div>
+                </div>
+
+                <button type="button" class="saas-tab-btn" id="saasAddCatBtn" title="New Category (Ctrl+Shift+F)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>New Category</span>
+                </button>
+            </nav>
+
+            <!-- Main Content Area -->
+            <main class="content-area">
+
+                <!-- Header Banner -->
+                <div class="content-header">
+                    <div>
+                        <h1 class="view-title" id="currentViewTitle">All Passwords</h1>
+                        <p class="view-desc" id="currentViewDesc">Securely encrypted credentials stored on your local disk. Drag & drop to re-categorize.</p>
+                    </div>
+                    <div class="action-buttons">
+                        <!-- Grid vs Table View Switcher -->
+                        <div class="view-mode-toggle" id="viewModeToggleGroup">
+                            <button type="button" class="view-mode-btn active" id="viewModeGridBtn" title="Cards Grid View">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                <span>Cards</span>
+                            </button>
+                            <button type="button" class="view-mode-btn" id="viewModeTableBtn" title="Table Rows View">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                                <span>Table</span>
+                            </button>
+                        </div>
+
+                        <button id="openNewCategoryModalBtn" class="btn btn-secondary category-action-btn" title="New Category (Ctrl+Shift+F)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                            <span>Category</span>
+                            <kbd class="kbd-indicator" id="newCategoryKbdBadge">Ctrl+Shift+F</kbd>
+                        </button>
+                        <button id="openNewEntryModalBtn" class="btn btn-primary" title="Add New Password (Ctrl+Shift+A)">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" >
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            <span>Add New Password</span>
+                            <kbd class="kbd-indicator" id="newPasswordKbdBadge">Ctrl+Shift+A</kbd>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Password Uses Strip -->
+                <section class="recent-strip-container" id="recentStripSection">
+                    <div class="section-sub-header">
+                        <div class="section-sub-title">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                            Recent Password Uses
+                        </div>
+                        <span class="text-muted text-xs">Quick 1-click clipboard actions</span>
+                    </div>
+                    <div class="recent-scroll-row" id="recentUsesRow">
+                        <!-- Dynamic Recent Passwords -->
+                    </div>
+                </section>
+
+                <!-- Passwords Table / Grid View -->
+                <section class="entries-section">
+                    <!-- Cards Grid View (Default) -->
+                    <div class="entries-cards-grid" id="entriesCardsGrid">
+                        <!-- Dynamic Password Cards -->
+                    </div>
+
+                    <!-- Table Rows View (Alternative) -->
+                    <div class="table-container hidden" id="entriesTableContainer">
+                        <table class="saas-table" id="entriesTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 28px;"></th>
+                                    <th>Account / Service</th>
+                                    <th>Category</th>
+                                    <th>Username / Account</th>
+                                    <th>Password</th>
+                                    <th>Custom Fields</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="entriesTableBody">
+                                <!-- Dynamic Rows (draggable) -->
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Empty State -->
+                    <div id="emptyState" class="empty-state-card hidden">
+                        <div class="empty-icon">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                                <line x1="12" y1="11" x2="12" y2="17"></line>
+                                <line x1="9" y1="14" x2="15" y2="14"></line>
+                            </svg>
+                        </div>
+                        <h3 class="empty-title">No credentials found</h3>
+                        <p class="empty-text">There are no passwords in this category. You can add a new one or drag existing passwords from other views.</p>
+                        <button class="btn btn-primary btn-sm" id="emptyAddBtn">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" >
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                            </svg>
+                            Add New Password</button>
+                    </div>
+                </section>
+            </main>
+        </div>
+
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+
+    <!-- Create New Category Modal (Ctrl + Shift + F) -->
+    <div id="newCatModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">New Category</h2>
+                    <p class="modal-subtitle">Organize your passwords into folders (Ctrl + Shift + F).</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="newCatModal" aria-label="Close modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <form id="newCatForm" class="modal-form">
+                <div class="form-group">
+                    <label for="newCatNameInput">Category Name</label>
+                    <input type="text" id="newCatNameInput" placeholder="e.g. Gaming, Office, Entertainment, Banking" required autofocus autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="newCatModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Edit Category Modal (Requirement 2) -->
+    <div id="editCatModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Edit Category</h2>
+                    <p class="modal-subtitle">Rename this category folder.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="editCatModal" aria-label="Close modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <form id="editCatForm" class="modal-form">
+                <input type="hidden" id="editCatOldNameInput" value="">
+                <div class="form-group">
+                    <label for="editCatNewNameInput">New Category Name</label>
+                    <input type="text" id="editCatNewNameInput" placeholder="Enter updated category name..." required autofocus autocomplete="off">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="editCatModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Password Confirmation Modal (Requirement 5) -->
+    <div id="deleteConfirmModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" style="color: var(--danger-text);">Delete Password</h2>
+                    <p class="modal-subtitle">Permanent action requiring confirmation.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="deleteConfirmModal" aria-label="Close modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-form">
+                <p style="font-size: 0.9rem; margin-bottom: 8px;">Are you sure you want to permanently delete <strong id="deleteTargetTitle" style="color: var(--text-primary);">...</strong>?</p>
+                <p class="text-secondary" style="font-size: 0.8rem; margin-bottom: 14px;">This action cannot be undone. To proceed, please type <strong style="color: var(--danger-text);">confirm</strong> below:</p>
+                <div class="form-group">
+                    <input type="text" id="deleteConfirmInput" placeholder="Type confirm" autocomplete="off" style="text-align: center; font-weight: 600; letter-spacing: 0.5px;">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="deleteConfirmModal">Cancel</button>
+                    <button type="button" id="executeDeleteBtn" class="btn btn-danger" disabled>Delete Password</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add / Edit Password Entry Modal -->
+    <div id="entryModal" class="modal-backdrop hidden">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="entryModalTitle">Add New Password</h2>
+                    <p class="modal-subtitle">Stored securely using Argon2 + Fernet AES-128 encryption.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="entryModal" aria-label="Close modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            
+            <form id="entryForm" class="modal-form">
+                <input type="hidden" id="formEntryId" value="">
+
+                <div class="form-row form-grid-2">
+                    <div class="form-group">
+                        <label for="formTitle">Service / Website Name</label>
+                        <input type="text" id="formTitle" placeholder="e.g. Steam, GitHub, Netflix, Work Portal" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="formCategory">Category (Optional)</label>
+                        <div class="search-combobox" id="categoryCombobox">
+                            <div class="combobox-input-wrap">
+                                <input type="text" id="formCategory" placeholder="Optional (e.g. Gaming, Work)" autocomplete="off">
+                                <button type="button" class="combobox-chevron-btn" id="comboboxToggleBtn" aria-label="Toggle category list" tabindex="-1">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="6 9 12 15 18 9"></polyline>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="combobox-dropdown hidden" id="categoryDropdownList">
+                                <!-- Populated dynamically with search filtering -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Avatar & Icon Picker (Optional) -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="formAvatar">Card Avatar & Icon (Optional)</label>
+                        <span class="text-xs text-muted" id="avatarPreviewLabel">Auto-detected from name</span>
+                    </div>
+                    <div class="avatar-picker-row">
+                        <div class="avatar-current-preview" id="avatarCurrentPreview" title="Current Card Icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                        </div>
+                        <input type="hidden" id="formAvatar" value="">
+                        <div class="avatar-preset-chips" id="avatarPresetChips">
+                            <button type="button" class="avatar-chip active" data-avatar="" title="Auto-detect based on service name">Auto</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:🎮" title="Gaming">🎮</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:💼" title="Work">💼</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:💳" title="Finance">💳</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:🔒" title="Security">🔒</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:🌐" title="Web">🌐</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:💻" title="Tech">💻</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:✉️" title="Email">✉️</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:⭐" title="Favorite">⭐</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:☁️" title="Cloud">☁️</button>
+                            <button type="button" class="avatar-chip" data-avatar="emoji:🛡️" title="Shield">🛡️</button>
+                        </div>
+                        <input type="text" class="avatar-custom-input" id="avatarCustomInput" placeholder="Custom emoji..." maxlength="6" title="Enter custom emoji">
+                    </div>
+                </div>
+
+                <!-- Username with Random Preset Badges -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="formUsername">Username / Account</label>
+                        <div class="generator-badges-row">
+                            <span class="gen-badge-label">⚡ Random:</span>
+                            <button type="button" class="badge-btn uname-badge" data-preset="gaming">🎮 Gaming</button>
+                            <button type="button" class="badge-btn uname-badge" data-preset="work">💼 Work</button>
+                            <button type="button" class="badge-btn uname-badge" data-preset="office">🏢 Office</button>
+                            <button type="button" class="badge-btn uname-badge" data-preset="entertainment">🎬 Stream</button>
+                            <button type="button" class="badge-btn uname-badge" data-preset="personal">👤 Personal</button>
+                        </div>
+                    </div>
+                    <input type="text" id="formUsername" placeholder="e.g. user@example.com or click a badge above" required>
+                </div>
+
+                <!-- Password with Presets -->
+                <div class="form-group">
+                    <div class="label-row">
+                        <label for="formPassword">Password</label>
+                        <div class="generator-badges-row">
+                            <span class="gen-badge-label">⚡ Presets:</span>
+                            <button type="button" class="badge-btn pw-badge" data-preset="strong">Strong (16)</button>
+                            <button type="button" class="badge-btn pw-badge" data-preset="ultra">Ultra (24)</button>
+                            <button type="button" class="badge-btn pw-badge" data-preset="pin">PIN (6)</button>
+                            <button type="button" class="btn-text-link" id="toggleFormPasswordBtn">Show</button>
+                        </div>
+                    </div>
+                    <div class="password-input-wrap">
+                        <input type="password" id="formPassword" placeholder="Enter secure password or click preset" required class="mono-input">
+                    </div>
+                    <div class="strength-meter">
+                        <div class="strength-bar" id="strengthBar"></div>
+                    </div>
+                </div>
+
+                <!-- Custom Fields Section -->
+                <div class="custom-fields-wrapper">
+                    <div class="custom-fields-header">
+                        <div>
+                            <span class="custom-fields-title">Custom Fields</span>
+                            <span class="custom-fields-hint">Save anything else (PIN, Recovery Codes, Secret Note, URL)</span>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-xs" id="addCustomFieldBtn">
+                            + Add Field
+                        </button>
+                    </div>
+
+                    <div id="customFieldsList" class="custom-fields-list">
+                        <!-- Dynamic Custom Field Rows -->
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="entryModal">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveEntryBtn">Save Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- View Password Details Modal -->
+    <div id="viewModal" class="modal-backdrop hidden">
+        <div class="modal-window">
+            <div class="modal-header">
+                <div>
+                    <div class="modal-badge" id="viewCategoryBadge">Category</div>
+                    <h2 class="modal-title" id="viewTitle">Service Name</h2>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="viewModal" aria-label="Close modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="view-content">
+                <!-- Username Block -->
+                <div class="view-item">
+                    <span class="view-label">Username / Account</span>
+                    <div class="view-value-row">
+                        <span class="view-value" id="viewUsername">—</span>
+                        <button class="btn btn-secondary btn-sm copy-btn" id="viewCopyUsernameBtn" data-target="viewUsername">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Password Block -->
+                <div class="view-item">
+                    <div class="label-row">
+                        <span class="view-label">Password</span>
+                        <button type="button" class="btn-text-link" id="viewTogglePwBtn">Show Password</button>
+                    </div>
+                    <div class="view-value-row">
+                        <span class="view-value mono-text masked-pw" id="viewPassword">••••••••••••</span>
+                        <button class="btn btn-primary btn-sm copy-btn" id="viewCopyPasswordBtn" data-target="viewPassword">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            <span>Copy Password</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Custom Fields Block -->
+                <div class="view-custom-fields-block" id="viewCustomFieldsBlock">
+                    <span class="view-label">Custom Fields</span>
+                    <div class="view-custom-list" id="viewCustomList">
+                        <!-- Custom fields rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer view-footer">
+                <button type="button" class="btn btn-danger btn-sm" id="viewDeleteBtn">Delete Entry</button>
+                <div class="view-footer-right">
+                    <button type="button" class="btn btn-secondary btn-sm" id="viewShareBtn">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                        <span>Share</span>
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" id="viewEditBtn">Edit Entry</button>
+                    <button type="button" class="btn btn-secondary btn-sm modal-close-btn" data-close="viewModal">Done</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Password Generator Modal -->
+    <div id="genModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Password Generator</h2>
+                    <p class="modal-subtitle">Generate high-entropy cryptographically secure keys.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="genModal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="generator-box">
+                <div class="gen-output-row">
+                    <span class="gen-output mono-text" id="genResult">P@ssw0rd123!</span>
+                    <button class="btn btn-primary btn-sm" id="copyGenResultBtn">Copy</button>
+                </div>
+
+                <div class="gen-control">
+                    <div class="label-row">
+                        <label>Length: <span id="genLenDisplay">18</span> characters</label>
+                    </div>
+                    <input type="range" id="genLength" min="8" max="64" value="18" class="range-slider">
+                </div>
+
+                <div class="gen-checkboxes">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="genUpper" checked> Uppercase (A-Z)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="genLower" checked> Lowercase (a-z)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="genNums" checked> Numbers (0-9)
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="genSyms" checked> Symbols (!@#$%^&*)
+                    </label>
+                </div>
+
+                <button class="btn btn-secondary btn-block mt-4" id="regenPasswordBtn">
+                    ↻ Regenerate Password
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Setup Vault Modal (First-time run) -->
+    <div id="setupModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">1st Vault Setup</h2>
+                    <p class="modal-subtitle">Create your master password to initialize your encrypted vault.</p>
+                </div>
+            </div>
+
+            <form id="setupForm" class="modal-form">
+                <div class="form-group">
+                    <label for="setupPassword">Create Master Password</label>
+                    <input type="password" id="setupPassword" placeholder="Minimum 4 characters" required minlength="4">
+                </div>
+
+                <div class="form-group">
+                    <label for="setupPasswordConfirm">Confirm Master Password</label>
+                    <input type="password" id="setupPasswordConfirm" placeholder="Re-enter password" required minlength="4">
+                </div>
+
+                <div class="callout-box">
+                    <strong>Note:</strong> Credentials are encrypted locally using Argon2id + Fernet AES-128. An emergency one-time recovery key will be provided for download and backup.
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary btn-block" id="setupSubmitBtn">Generate Vault</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Recovery Key Display Modal -->
+    <div id="recoveryKeyModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Save Recovery Key</h2>
+                    <p class="modal-subtitle">Crucial: Keep this key safe offline!</p>
+                </div>
+            </div>
+
+            <div class="recovery-body">
+                <div class="callout-box warning-callout">
+                    If you forget your master password, this recovery key is the ONLY way to regain access to your vault.
+                </div>
+
+                <div class="recovery-key-display mono-text" id="displayRecoveryKey">
+                    KEY-XXXX-XXXX
+                </div>
+
+                <div class="form-row">
+                    <button class="btn btn-secondary btn-block" id="copyRecoveryKeyBtn">
+                        Copy Key
+                    </button>
+                    <button class="btn btn-secondary btn-block" id="downloadRecoveryKeyBtn">
+                        💾 Download .txt
+                    </button>
+                </div>
+
+                <button class="btn btn-primary btn-block mt-3" id="doneRecoveryKeyBtn">
+                    I Have Saved My Recovery Key
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login / Unlock Modal -->
+    <div id="loginModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Unlock Vault</h2>
+                    <p class="modal-subtitle">Enter your master password to decrypt your credentials.</p>
+                </div>
+            </div>
+
+            <form id="loginForm" class="modal-form">
+                <div class="form-group">
+                    <label for="loginPassword">Master Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter master password" required autofocus>
+                </div>
+
+                <div id="loginErrorMsg" class="error-banner hidden">Incorrect password. Please try again.</div>
+
+                <div class="modal-footer login-footer">
+                    <button type="button" class="btn-text-link" id="openRecoverModalBtn">Forgot Password?</button>
+                    <button type="submit" class="btn btn-primary" id="loginSubmitBtn">Unlock Vault</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Account Recovery Modal -->
+    <div id="recoverModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Recover Vault</h2>
+                    <p class="modal-subtitle">Use your emergency one-time recovery key.</p>
+                </div>
+                <button class="btn-close" id="recoverCloseTopBtn" aria-label="Back to login">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="recoverForm" class="modal-form">
+                <div class="form-group">
+                    <label for="recoverKeyInput">Emergency Recovery Key</label>
+                    <input type="text" id="recoverKeyInput" placeholder="Paste your saved recovery key" required class="mono-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="recoverNewPwInput">New Master Password</label>
+                    <input type="password" id="recoverNewPwInput" placeholder="Enter new master password" required minlength="4">
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="recoverCancelBtn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Reset Password & Unlock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== SETTINGS MODAL ==================== -->
+    <div id="settingsModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-xl settings-modal-window">
+            <div class="modal-header">
+                <div class="modal-header-icon-title">
+                    <span class="modal-header-badge-icon">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                        </svg>
+                    </span>
+                    <div>
+                        <h2 class="modal-title">Settings & Customization</h2>
+                        <p class="modal-subtitle">Personalize your application appearance, layout, button colors, and keyboard shortcuts.</p>
+                    </div>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="settingsModal" aria-label="Close Settings">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="settings-layout">
+                <!-- Settings Left Nav -->
+                <nav class="settings-nav-sidebar">
+                    <button type="button" class="settings-tab-btn active" data-tab="appearanceTab">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="5"></circle>
+                            <line x1="12" y1="1" x2="12" y2="3"></line>
+                            <line x1="12" y1="21" x2="12" y2="23"></line>
+                            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                            <line x1="1" y1="12" x2="3" y2="12"></line>
+                            <line x1="21" y1="12" x2="23" y2="12"></line>
+                            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                        </svg>
+                        <span>Appearance</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-tab="layoutTab">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="9" y1="3" x2="9" y2="21"></line>
+                        </svg>
+                        <span>Layout Selection</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-tab="buttonsTab">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <path d="M12 2a10 10 0 0 1 10 10c0 4-3 7-7 7H12"></path>
+                        </svg>
+                        <span>Button Colors</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-tab="shortcutsTab">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                            <line x1="6" y1="8" x2="6.01" y2="8"></line>
+                            <line x1="10" y1="8" x2="10.01" y2="8"></line>
+                            <line x1="14" y1="8" x2="14.01" y2="8"></line>
+                            <line x1="18" y1="8" x2="18.01" y2="8"></line>
+                            <line x1="6" y1="12" x2="6.01" y2="12"></line>
+                            <line x1="18" y1="12" x2="18.01" y2="12"></line>
+                            <line x1="7" y1="16" x2="17" y2="16"></line>
+                        </svg>
+                        <span>Keyboard Shortcuts</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-tab="sharingTab">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                        <span>Cloud Sharing</span>
+                    </button>
+                    <button type="button" class="settings-tab-btn" data-tab="resetTab">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                            <path d="M3 3v5h5"></path>
+                        </svg>
+                        <span>Reset Preferences</span>
+                    </button>
+                </nav>
+
+                <!-- Settings Content Panes -->
+                <div class="settings-content-pane">
+
+                    <!-- SECTION 1: APPEARANCE -->
+                    <div id="appearanceTab" class="settings-tab-content active">
+                        <div class="settings-section-head">
+                            <h3 class="settings-title">Appearance & Theme Mode</h3>
+                            <p class="settings-desc">Choose between a neutral monochrome dark theme, a crisp light theme, or automatic system synchronization.</p>
+                        </div>
+
+                        <div class="theme-options-grid">
+                            <div class="theme-choice-card" data-theme-choice="dark">
+                                <div class="theme-preview-box dark-theme-preview">
+                                    <div class="theme-preview-header"></div>
+                                    <div class="theme-preview-body">
+                                        <div class="theme-preview-sidebar"></div>
+                                        <div class="theme-preview-lines">
+                                            <span class="preview-line"></span>
+                                            <span class="preview-line short"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="theme-choice-info">
+                                    <div class="theme-choice-title">
+                                        <strong>Dark Mode</strong>
+                                        <span class="badge badge-subtle">Monochrome</span>
+                                    </div>
+                                    <p class="theme-choice-desc">Neutral black, charcoal, and gray surfaces. Clean contrast without blue tinting.</p>
+                                </div>
+                                <div class="theme-choice-radio">
+                                    <input type="radio" name="appearanceTheme" value="dark" id="radioThemeDark">
+                                    <label for="radioThemeDark">Active</label>
+                                </div>
+                            </div>
+
+                            <div class="theme-choice-card" data-theme-choice="light">
+                                <div class="theme-preview-box light-theme-preview">
+                                    <div class="theme-preview-header"></div>
+                                    <div class="theme-preview-body">
+                                        <div class="theme-preview-sidebar"></div>
+                                        <div class="theme-preview-lines">
+                                            <span class="preview-line"></span>
+                                            <span class="preview-line short"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="theme-choice-info">
+                                    <div class="theme-choice-title">
+                                        <strong>Light Mode</strong>
+                                        <span class="badge badge-subtle">Monochrome</span>
+                                    </div>
+                                    <p class="theme-choice-desc">Crisp white and light gray surfaces with high-contrast neutral dark text.</p>
+                                </div>
+                                <div class="theme-choice-radio">
+                                    <input type="radio" name="appearanceTheme" value="light" id="radioThemeLight">
+                                    <label for="radioThemeLight">Active</label>
+                                </div>
+                            </div>
+
+                            <div class="theme-choice-card" data-theme-choice="system">
+                                <div class="theme-preview-box system-theme-preview">
+                                    <div class="theme-preview-half dark-half"></div>
+                                    <div class="theme-preview-half light-half"></div>
+                                </div>
+                                <div class="theme-choice-info">
+                                    <div class="theme-choice-title">
+                                        <strong>System Mode</strong>
+                                        <span class="badge badge-subtle">Auto Sync</span>
+                                    </div>
+                                    <p class="theme-choice-desc">Matches your operating system's dark or light theme settings automatically.</p>
+                                </div>
+                                <div class="theme-choice-radio">
+                                    <input type="radio" name="appearanceTheme" value="system" id="radioThemeSystem">
+                                    <label for="radioThemeSystem">Active</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2: LAYOUT SELECTION -->
+                    <div id="layoutTab" class="settings-tab-content">
+                        <div class="settings-section-head">
+                            <h3 class="settings-title">Layout Selection</h3>
+                            <p class="settings-desc">Select how VaultKey organizes its navigation and workspace. Switching layouts updates the application immediately without reloading or losing state.</p>
+                        </div>
+
+                        <div class="layout-options-grid">
+                            <!-- Layout Option 1: Classic Layout -->
+                            <div class="layout-choice-card" data-layout-choice="classic" id="cardLayoutClassic">
+                                <div class="layout-preview-box classic-layout-preview">
+                                    <div class="layout-schematic-topbar">
+                                        <span class="dot"></span>
+                                        <span class="bar search"></span>
+                                        <span class="bar pill"></span>
+                                    </div>
+                                    <div class="layout-schematic-main">
+                                        <div class="layout-schematic-sidebar">
+                                            <span class="bar"></span>
+                                            <span class="bar"></span>
+                                            <span class="bar"></span>
+                                        </div>
+                                        <div class="layout-schematic-content">
+                                            <div class="bar title"></div>
+                                            <div class="bar table"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="layout-choice-info">
+                                    <div class="layout-choice-title">
+                                        <strong>Layout Option 1: Classic Layout</strong>
+                                        <span class="badge badge-accent">Default</span>
+                                    </div>
+                                    <p class="layout-choice-desc">Traditional top navigation bar across the full width with global search and statistics pill. Original page structure with clean monochrome styling.</p>
+                                </div>
+                                <div class="layout-choice-action">
+                                    <button type="button" class="btn btn-secondary btn-sm select-layout-btn" data-target-layout="classic">Select Classic Layout</button>
+                                </div>
+                            </div>
+
+                            <!-- Layout Option 2: SaaS Tabs Layout (No Sidebar, Only Tabs) -->
+                            <div class="layout-choice-card" data-layout-choice="sidebar" id="cardLayoutSidebar">
+                                <div class="layout-preview-box saas-layout-preview">
+                                    <div class="layout-schematic-topbar">
+                                        <span class="dot"></span>
+                                        <span class="bar search"></span>
+                                        <span class="bar pill"></span>
+                                    </div>
+                                    <div class="layout-schematic-tabstrip">
+                                        <span class="tab-pill active"></span>
+                                        <span class="tab-pill"></span>
+                                        <span class="tab-pill"></span>
+                                        <span class="tab-pill"></span>
+                                    </div>
+                                    <div class="layout-schematic-fullcontent">
+                                        <div class="bar title"></div>
+                                        <div class="bar table"></div>
+                                    </div>
+                                </div>
+                                <div class="layout-choice-info">
+                                    <div class="layout-choice-title">
+                                        <strong>Layout Option 2: SaaS Tabs Layout</strong>
+                                        <span class="badge badge-subtle">No Sidebar</span>
+                                    </div>
+                                    <p class="layout-choice-desc">Clean modern SaaS interface with full-width workspace, top horizontal navigation tabs, and no sidebar taking up screen space.</p>
+                                </div>
+                                <div class="layout-choice-action">
+                                    <button type="button" class="btn btn-secondary btn-sm select-layout-btn" data-target-layout="sidebar">Select SaaS Tabs Layout</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3: BUTTON APPEARANCE -->
+                    <div id="buttonsTab" class="settings-tab-content">
+                        <div class="settings-section-head">
+                            <h3 class="settings-title">Button & Accent Customization</h3>
+                            <p class="settings-desc">Customize interactive button background and text colors. Real-time contrast is evaluated automatically to prevent unreadable color combinations.</p>
+                        </div>
+
+                        <!-- Target Theme Selector for Customization -->
+                        <div class="theme-target-row">
+                            <span class="theme-target-label">Edit buttons for theme:</span>
+                            <div class="button-group">
+                                <button type="button" class="btn btn-sm btn-secondary active" id="btnThemeTargetDark">Dark Theme</button>
+                                <button type="button" class="btn btn-sm btn-secondary" id="btnThemeTargetLight">Light Theme</button>
+                            </div>
+                        </div>
+
+                        <!-- Contrast Warning Alert -->
+                        <div id="contrastWarningBox" class="alert-box alert-warning hidden">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                                <line x1="12" y1="9" x2="12" y2="13"></line>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                            <span id="contrastWarningText">Warning: Text contrast against the button background is low. Standard recommends at least 4.5:1.</span>
+                        </div>
+
+                        <!-- Color Controls Grid -->
+                        <div class="color-controls-grid">
+                            <!-- Primary Button Bg -->
+                            <div class="color-field-group">
+                                <label for="pickerPrimaryBg">Primary Button Background</label>
+                                <div class="color-input-pair">
+                                    <input type="color" id="pickerPrimaryBg" value="#ffffff" class="color-picker-input">
+                                    <input type="text" id="hexPrimaryBg" value="#ffffff" class="hex-text-input mono-text" maxlength="7" spellcheck="false">
+                                </div>
+                            </div>
+
+                            <!-- Primary Button Text -->
+                            <div class="color-field-group">
+                                <label for="pickerPrimaryText">Primary Button Text</label>
+                                <div class="color-input-pair">
+                                    <input type="color" id="pickerPrimaryText" value="#111111" class="color-picker-input">
+                                    <input type="text" id="hexPrimaryText" value="#111111" class="hex-text-input mono-text" maxlength="7" spellcheck="false">
+                                </div>
+                            </div>
+
+                            <!-- Secondary Button Bg -->
+                            <div class="color-field-group">
+                                <label for="pickerSecondaryBg">Secondary Button Background</label>
+                                <div class="color-input-pair">
+                                    <input type="color" id="pickerSecondaryBg" value="#262626" class="color-picker-input">
+                                    <input type="text" id="hexSecondaryBg" value="#262626" class="hex-text-input mono-text" maxlength="7" spellcheck="false">
+                                </div>
+                            </div>
+
+                            <!-- Secondary Button Text -->
+                            <div class="color-field-group">
+                                <label for="pickerSecondaryText">Secondary Button Text</label>
+                                <div class="color-input-pair">
+                                    <input type="color" id="pickerSecondaryText" value="#ffffff" class="color-picker-input">
+                                    <input type="text" id="hexSecondaryText" value="#ffffff" class="hex-text-input mono-text" maxlength="7" spellcheck="false">
+                                </div>
+                            </div>
+
+                            <!-- Button Hover Tint -->
+                            <div class="color-field-group">
+                                <label for="pickerPrimaryHover">Primary Button Hover</label>
+                                <div class="color-input-pair">
+                                    <input type="color" id="pickerPrimaryHover" value="#e5e5e5" class="color-picker-input">
+                                    <input type="text" id="hexPrimaryHover" value="#e5e5e5" class="hex-text-input mono-text" maxlength="7" spellcheck="false">
+                                </div>
+                            </div>
+
+                            <!-- Accent Color -->
+                            <div class="color-field-group">
+                                <label for="pickerAccent">Accent Color (Active States)</label>
+                                <div class="color-input-pair">
+                                    <input type="color" id="pickerAccent" value="#ffffff" class="color-picker-input">
+                                    <input type="text" id="hexAccent" value="#ffffff" class="hex-text-input mono-text" maxlength="7" spellcheck="false">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Live Interactive Preview -->
+                        <div class="preview-section-card">
+                            <div class="preview-section-header">
+                                <span class="preview-header-title">Live Button & Contrast Preview</span>
+                                <div class="contrast-badges-row">
+                                    <span class="contrast-score-pill" id="primaryContrastPill">Primary Contrast: 15.2:1</span>
+                                    <span class="contrast-score-pill" id="secondaryContrastPill">Secondary Contrast: 10.4:1</span>
+                                </div>
+                            </div>
+                            <div class="preview-buttons-stage" id="previewStage">
+                                <button type="button" class="btn btn-primary" id="previewPrimaryBtn">Primary Action</button>
+                                <button type="button" class="btn btn-secondary" id="previewSecondaryBtn">Secondary Action</button>
+                                <span class="badge" id="previewAccentBadge">Accent Badge</span>
+                                <button type="button" class="btn btn-danger" id="previewDangerBtn">Destructive Action</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-actions-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetButtonColorsBtn">Reset Button Colors to Defaults</button>
+                            <span class="text-muted text-xs">Colors apply immediately and persist across sessions.</span>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4: KEYBOARD SHORTCUTS -->
+                    <div id="shortcutsTab" class="settings-tab-content">
+                        <div class="settings-section-head">
+                            <h3 class="settings-title">Keyboard Shortcuts Manager</h3>
+                            <p class="settings-desc">View and customize global application shortcuts. Shortcut conflicts are evaluated in real time.</p>
+                        </div>
+
+                        <!-- Conflict Warning Alert -->
+                        <div id="shortcutConflictAlert" class="alert-box alert-danger hidden">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span id="shortcutConflictText">Conflict detected: Key combination already assigned.</span>
+                        </div>
+
+                        <!-- Shortcuts Table -->
+                        <div class="table-container shortcuts-table-wrap">
+                            <table class="saas-table shortcuts-table" id="shortcutsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Action</th>
+                                        <th>Description</th>
+                                        <th>Key Binding</th>
+                                        <th class="text-right">Customize</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="shortcutsTableBody">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="settings-actions-footer">
+                            <button type="button" class="btn btn-secondary btn-sm" id="resetShortcutsBtn">Reset Shortcuts to Defaults</button>
+                            <span class="text-muted text-xs">Windows conventions supported. Typing in form fields is protected.</span>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 5: RESET PREFERENCES -->
+                    <div id="resetTab" class="settings-tab-content">
+                        <div class="settings-section-head">
+                            <h3 class="settings-title">Reset Preferences</h3>
+                            <p class="settings-desc">Selectively restore individual settings or return all customization preferences to default.</p>
+                        </div>
+
+                        <div class="callout-box">
+                            <div class="callout-icon-text">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                                </svg>
+                                <div>
+                                    <strong>Data Protection Guarantee</strong>
+                                    <p class="callout-subtext">Resetting preferences will <strong>NEVER</strong> delete your saved passwords, usernames, categories, notes, or encrypted master vault data.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="reset-cards-grid">
+                            <div class="reset-card">
+                                <div class="reset-card-info">
+                                    <h4>Reset Button & Accent Colors</h4>
+                                    <p>Restores primary and secondary button backgrounds and text colors to the default monochrome palette for the active theme.</p>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" id="resetBtnColorsActionBtn">Reset Colors</button>
+                            </div>
+
+                            <div class="reset-card">
+                                <div class="reset-card-info">
+                                    <h4>Reset Keyboard Shortcuts</h4>
+                                    <p>Restores all customized shortcuts back to standard application defaults (Ctrl+K, Ctrl+,, Ctrl+Shift+L, etc.).</p>
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" id="resetShortcutsActionBtn">Reset Shortcuts</button>
+                            </div>
+
+                            <div class="reset-card reset-card-danger">
+                                <div class="reset-card-info">
+                                    <h4>Reset All Customizations</h4>
+                                    <p>Returns layout, theme mode, button colors, and keyboard shortcuts back to standard out-of-the-box defaults.</p>
+                                </div>
+                                <button type="button" class="btn btn-danger btn-sm" id="resetAllPrefsActionBtn">Reset All Settings</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 6: CLOUD SHARING -->
+                    <div id="sharingTab" class="settings-tab-content">
+                        <div class="settings-section-header">
+                            <h3>Cross-Device Sharing Service</h3>
+                            <p>Configure your Cloudflare Worker sharing API and static Web Viewer for cross-device password sharing.</p>
+                        </div>
+
+                        <div class="settings-callout" style="margin-bottom: 20px;">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                            </svg>
+                            <div>
+                                <strong>Architecture</strong>
+                                <p class="callout-subtext">Passwords and credentials are encrypted on your device using AES-256-GCM before upload. The decryption key stays exclusively in the URL fragment and is NEVER sent to or stored on any server.</p>
+                            </div>
+                        </div>
+
+                        <div class="settings-group">
+                            <label class="settings-group-label" for="prefSharingApiUrl">Sharing API Endpoint (Cloudflare Worker)</label>
+                            <div class="input-with-action-wrap">
+                                <input type="url" id="prefSharingApiUrl" class="text-input" placeholder="https://vaultkey-share-api.pritishdash44.workers.dev" autocomplete="off" spellcheck="false">
+                                <button type="button" class="btn btn-secondary btn-sm" id="testSharingConnBtn">Test Connection</button>
+                            </div>
+                            <span class="text-xs text-muted" id="testSharingConnStatus">Connects to your Cloudflare Worker API.</span>
+                        </div>
+
+                        <div class="settings-group" style="margin-top: 16px;">
+                            <label class="settings-group-label" for="prefSharingViewerUrl">Web Viewer URL (Static Hosting / Cloudflare Pages)</label>
+                            <input type="url" id="prefSharingViewerUrl" class="text-input" placeholder="https://vaultkey-secret.pages.dev" autocomplete="off" spellcheck="false">
+                            <span class="text-xs text-muted">The public URL where recipients view decrypted credentials in their browser.</span>
+                        </div>
+
+                        <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                            <button type="button" class="btn btn-primary btn-sm" id="saveSharingSettingsBtn">Save Sharing Configuration</button>
+                        </div>
+
+                        <div class="settings-section-header" style="margin-top: 32px;">
+                            <h4>Active Shares on this Device</h4>
+                            <p>Shares created from this VaultKey instance. You can manually revoke them at any time.</p>
+                        </div>
+
+                        <div id="activeSharesTableWrap" style="margin-top: 12px; overflow-x: auto;">
+                            <div id="noActiveSharesNotice" class="text-xs text-muted" style="padding: 16px; text-align: center; border: 1px dashed var(--border); border-radius: 8px;">
+                                No active cross-device shares recorded. Create one using the "Share" button on any credential card.
+                            </div>
+                            <div id="activeSharesList" style="display: flex; flex-direction: column; gap: 8px;"></div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary modal-close-btn" data-close="settingsModal">Done</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== COMMAND PALETTE (Ctrl + K) ==================== -->
+    <div id="commandPaletteModal" class="modal-backdrop hidden">
+        <div class="command-palette-window">
+            <div class="command-palette-header">
+                <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="commandPaletteInput" placeholder="Type a command or search actions..." autocomplete="off">
+                <kbd class="kbd-indicator">ESC</kbd>
+            </div>
+            <div class="command-palette-results" id="commandPaletteResults">
+                <!-- Populated dynamically with arrow navigation -->
+            </div>
+            <div class="command-palette-footer">
+                <span>Use <kbd>↑</kbd> <kbd>↓</kbd> to navigate</span>
+                <span><kbd>Enter</kbd> to select</span>
+                <span><kbd>Esc</kbd> to close</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== KEYBOARD SHORTCUTS REFERENCE (Ctrl + /) ==================== -->
+    <div id="shortcutsHelpModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-shortcuts">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Keyboard Shortcuts Reference</h2>
+                    <p class="modal-subtitle">Fast keyboard control throughout the entire application.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="shortcutsHelpModal" aria-label="Close shortcuts modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="shortcuts-help-content" id="shortcutsHelpContent">
+                <!-- Grouped list of shortcuts -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary modal-close-btn" data-close="shortcutsHelpModal">Close</button>
+                <button type="button" class="btn btn-primary" id="openSettingsShortcutsFromHelpBtn">Customize in Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== CONFIRM RESET MODAL ==================== -->
+    <div id="resetConfirmModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Confirm Reset</h2>
+                    <p class="modal-subtitle">Reset preference confirmation.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="resetConfirmModal" aria-label="Close modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-form">
+                <p style="font-size: 0.9rem; margin-bottom: 8px;" id="resetConfirmMessage">Are you sure you want to reset your preferences?</p>
+                <p class="text-secondary" style="font-size: 0.8rem; margin-bottom: 14px;">Your encrypted passwords and category data will not be affected.</p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="resetConfirmModal">Cancel</button>
+                    <button type="button" id="confirmResetActionBtn" class="btn btn-primary">Confirm Reset</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== SECURE SHARE MODAL (Zero-Knowledge Cross-Device) ==================== -->
+    <div id="shareModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-md">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title">Secure Password Share</h2>
+                    <p class="modal-subtitle">end-to-end encrypted sharing via Cloudflare.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="shareModal" aria-label="Close share modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="modal-form">
+                <!-- STAGE 1: CONFIGURATION -->
+                <div id="shareConfigStage">
+                    <div class="share-info-callout">
+                        <div class="share-callout-header">
+                            <strong id="shareModalTargetTitle">Protected Credential</strong>
+                            <span class="share-account-badge" id="shareModalTargetUname">account@example.com</span>
+                        </div>
+                        <p class="text-xs text-secondary" style="margin-top: 4px;">Choose the fields to include and how long the share should remain accessible.</p>
+                    </div>
+
+                    <!-- Fields Selection -->
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label class="field-selection-label">Select Information to Share</label>
+                        <div class="share-options-grid">
+                            <label class="share-check-label">
+                                <input type="checkbox" id="shareOptPassword" checked>
+                                <span>Password</span>
+                            </label>
+                            <label class="share-check-label">
+                                <input type="checkbox" id="shareOptUsername" checked>
+                                <span>Username / Account</span>
+                            </label>
+                            <label class="share-check-label">
+                                <input type="checkbox" id="shareOptTitle" checked>
+                                <span>Service Title</span>
+                            </label>
+                            <label class="share-check-label" id="shareOptCustomWrap" style="display: none;">
+                                <input type="checkbox" id="shareOptCustom" checked>
+                                <span>Custom Fields / Notes</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Expiration Selection -->
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label class="field-selection-label">Expiration Time</label>
+                        <div class="share-exp-pills-row">
+                            <label class="exp-pill-label">
+                                <input type="radio" name="shareExpOption" value="600" checked>
+                                <span>10 Minutes</span>
+                            </label>
+                            <label class="exp-pill-label">
+                                <input type="radio" name="shareExpOption" value="3600">
+                                <span>1 Hour</span>
+                            </label>
+                            <label class="exp-pill-label">
+                                <input type="radio" name="shareExpOption" value="86400">
+                                <span>24 Hours</span>
+                            </label>
+                            <label class="exp-pill-label">
+                                <input type="radio" name="shareExpOption" value="custom">
+                                <span>Custom...</span>
+                            </label>
+                        </div>
+
+                        <!-- Custom Expiration Inputs -->
+                        <div id="shareCustomExpRow" class="share-custom-exp-wrap" style="display: none; margin-top: 8px;">
+                            <input type="number" id="shareCustomExpVal" class="text-input" min="1" max="168" value="30" style="width: 90px;">
+                            <select id="shareCustomExpUnit" class="text-input" style="width: 120px;">
+                                <option value="minutes">Minutes</option>
+                                <option value="hours">Hours</option>
+                                <option value="days">Days</option>
+                            </select>
+                            <span class="text-xs text-muted" style="align-self: center;">(Max 7 days)</span>
+                        </div>
+                    </div>
+
+                    <!-- Cryptographic Assurance Callout -->
+                    <div class="share-security-pill" style="margin-top: 14px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        <span>Encrypted locally with AES-256-GCM. Decryption key stays strictly in the URL fragment (#).</span>
+                    </div>
+
+                    <div class="modal-footer" style="padding: 16px 0 0 0; border-top: 1px solid var(--border); margin-top: 16px;">
+                        <button type="button" class="btn btn-secondary modal-close-btn" data-close="shareModal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="generateShareBtn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="18" cy="5" r="3"></circle>
+                                <circle cx="6" cy="12" r="3"></circle>
+                                <circle cx="18" cy="19" r="3"></circle>
+                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                            </svg>
+                            Generate Secure Share Link
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STAGE 2: GENERATED LINK RESULT -->
+                <div id="shareResultStage" style="display: none;">
+                    <div class="share-info-callout">
+                        <div class="share-callout-header">
+                            <strong id="shareResultTargetTitle">Protected Credential</strong>
+                            <span class="share-countdown-pill" id="shareModalTimer">10:00</span>
+                        </div>
+                        <p class="text-xs text-secondary" style="margin-top: 4px;">Anyone with this link can decrypt the shared fields before it expires.</p>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>Secure Share Link</label>
+                        <div class="share-input-copy-wrap">
+                            <input type="text" id="shareLinkInput" readonly class="mono-input" style="font-size: 12px; cursor: pointer;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="copyShareLinkBtn">Copy Link</button>
+                            <button type="button" class="btn btn-secondary btn-sm" id="openShareLinkBtn" title="Open in viewer">Open ↗</button>
+                        </div>
+                        <span class="text-xs text-muted" style="margin-top: 4px; display: block;">Contains only the secure identifier. Zero secret keys or plaintext data are exposed in the link.</span>
+                    </div>
+
+                    <div class="form-group" style="margin-top: 14px;">
+                        <label>4-Digit Security Unlock Code</label>
+                        <div class="share-code-box">
+                            <div class="share-code-display mono-text" id="shareCodeDisplay">----</div>
+                            <button type="button" class="btn btn-secondary btn-sm" id="copyShareCodeBtn">Copy Code</button>
+                        </div>
+                        <span class="text-xs text-muted">The recipient MUST enter this 4-digit code to decrypt and reveal the password.</span>
+                    </div>
+
+                    <div class="share-management-box" style="margin-top: 14px;">
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <div>
+                                <span style="font-size: 12px; font-weight: 600; color: var(--text-primary);">Manual Revocation</span>
+                                <p class="text-xs text-muted">Instantly delete this share from the server before it expires.</p>
+                            </div>
+                            <button type="button" class="btn btn-danger btn-sm" id="revokeCurrentShareBtn">Revoke Now</button>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer" style="padding: 16px 0 0 0; border-top: 1px solid var(--border); margin-top: 16px;">
+                        <button type="button" class="btn btn-secondary" id="shareConfigBackBtn">Configure Another</button>
+                        <button type="button" class="btn btn-primary" id="copyAllShareInfoBtn">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
+                            Copy All (Link + Code)
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Right-Click Context Menu -->
+    <div id="categoryContextMenu" class="context-menu hidden">
+        <button type="button" class="context-menu-item" id="contextEditCategoryBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+            </svg>
+            <span>Edit Category</span>
+        </button>
+        <button type="button" class="context-menu-item context-menu-danger" id="contextDeleteCategoryBtn">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Delete Category</span>
+        </button>
+    </div>
+
+    <!-- Toast Notification Container -->
+    <div id="toastContainer" class="toast-container"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

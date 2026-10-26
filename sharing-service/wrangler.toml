@@ -1,0 +1,18 @@
+name = "vaultkey-share-api"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# Production KV Namespace binding
+# Replace <YOUR_KV_NAMESPACE_ID> with the ID created via: wrangler kv:namespace create SHARES_KV
+[[kv_namespaces]]
+binding = "SHARES_KV"
+id = "2728d48becae48f1bc50f3299a7822ce"
+
+[vars]
+ENVIRONMENT = "production"
+MAX_PAYLOAD_SIZE = "65536"
+
+# Route configuration (optional custom domain or workers.dev)
+# routes = [
+#   { pattern = "api.share.yourdomain.com/*", zone_name = "yourdomain.com" }
+# ]
