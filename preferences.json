@@ -1,7 +1,7 @@
 {
     "layout": "sidebar",
-    "theme": "light",
-    "view_mode": "grid",
+    "theme": "dark",
+    "view_mode": "table",
     "sidebar_collapsed": false,
     "button_colors": {
         "dark": {
@@ -9,7 +9,7 @@
             "primary_text": "#111111",
             "secondary_bg": "#262626",
             "secondary_text": "#ffffff",
-            "primary_hover": "#e4e4e7",
+            "primary_hover": "#57575c",
             "secondary_hover": "#3f3f46",
             "accent": "#ffffff"
         },
@@ -36,5 +36,22 @@
     "sharing": {
         "api_url": "https://vaultkey-share-api.pritishdash44.workers.dev",
         "viewer_url": "https://vaultkey-secret.pages.dev"
+    },
+    "category_icons": {
+        "Crypto Pay": "\ud83d\udcb2",
+        "Movie": "\ud83d\udcbb",
+        "Travel": "\ud83d\udcbc",
+        "Cloud Ops": "\ud83d\udcbc",
+        "Personal": "\ud83e\udd16",
+        "Shopping": "\ud83c\udf10",
+        "Work & Projects": "\ud83d\udd12",
+        "Stock": "\ud83d\udcc8",
+        "Gaming": "\ud83c\udfb2",
+        "Uncategorized": "\ud83d\udd11",
+        "Streaming": "\ud83d\udcbb",
+        "Entertainment": "\ud83c\udfac",
+        "Development": "\ud83d\udcb9",
+        "Crypto": "\ud83d\udccd",
+        "Finance": "\ud83d\udc64"
     }
 }

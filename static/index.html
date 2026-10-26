@@ -4,10 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VaultKey — Modern Offline Password Manager</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/app_icon.png">
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script type="module" src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
 </head>
 <body>
     <!-- App Container -->
@@ -18,10 +22,7 @@
             <div class="topbar-left">
                 <div class="brand">
                     <span class="brand-icon">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                        </svg>
+                        <img src="/app_icon.png" alt="VaultKey" width="22" height="22" style="border-radius: 5px; display: block; object-fit: contain;">
                     </span>
                     <span class="brand-title">VaultKey</span>
                     <span class="brand-badge">Offline B2B Vault</span>
@@ -89,31 +90,28 @@
                 </button>
 
                 <!-- Generator Quick Launch -->
-                <button id="quickGenBtn" class="btn btn-secondary btn-sm" title="Password Generator (Ctrl + Shift + G)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button id="quickGenBtn" class="btn btn-icon" title="Password Generator (Ctrl + Shift + G)" aria-label="Password Generator">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
                         <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
                         <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
                     </svg>
-                    Generate
                 </button>
 
                 <!-- Settings Button -->
-                <button id="openSettingsBtn" class="btn btn-secondary btn-sm" title="Settings (Ctrl + ,)">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button id="openSettingsBtn" class="btn btn-icon" title="Settings (Ctrl + ,)" aria-label="Settings">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
                         <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                     </svg>
-                    Settings
                 </button>
 
                 <!-- Lock Vault -->
-                <button id="lockVaultBtn" class="btn btn-secondary btn-sm" title="Lock Vault Session">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <button id="lockVaultBtn" class="btn btn-icon" title="Lock Vault Session" aria-label="Lock Vault">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
-                    Lock Vault
                 </button>
             </div>
         </header>
@@ -155,7 +153,7 @@
                                     <rect x="14" y="14" width="7" height="7"></rect>
                                     <rect x="3" y="14" width="7" height="7"></rect>
                                 </svg>
-                                <span>All Passwords</span>
+                                <span>Dashboard</span>
                                 <span class="nav-count" id="countAll">0</span>
                             </button>
                         </li>
@@ -220,6 +218,17 @@
                             </button>
                         </li>
                         <li>
+                            <button class="nav-item" id="sidebarMigrationNavBtn" data-filter="migration" title="Account Migration (Bulk Import)">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="17 8 12 3 7 8"></polyline>
+                                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                                </svg>
+                                <span>Migration</span>
+                                <span class="nav-shortcut-badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border-color: rgba(16, 185, 129, 0.3);">Bulk</span>
+                            </button>
+                        </li>
+                        <li>
                             <button class="nav-item" id="sidebarSettingsNavBtn" title="Settings (Ctrl+,)">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="12" cy="12" r="3"></circle>
@@ -277,78 +286,36 @@
                 </div>
             </aside>
 
-            <!-- SaaS Navigation Tab Bar (Active in SaaS Layout - Layout Option 2) -->
+            <!-- SaaS Navigation Segmented Pill Bar (Active in SaaS Layout - Layout Option 2) -->
             <nav class="saas-tab-bar" id="saasTabBar" aria-label="SaaS Navigation Tabs">
-                <div class="saas-tab-group saas-primary-tabs">
-                    <button type="button" class="saas-tab active" data-tab-filter="all" id="saasTabAll">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <div class="saas-pill-nav">
+                    <button type="button" class="saas-pill-tab saas-tab active" data-tab-filter="all" id="saasTabAll">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <rect x="3" y="3" width="7" height="7"></rect>
                             <rect x="14" y="3" width="7" height="7"></rect>
                             <rect x="14" y="14" width="7" height="7"></rect>
                             <rect x="3" y="14" width="7" height="7"></rect>
                         </svg>
-                        <span>All Passwords</span>
+                        <span>Dashboard</span>
                         <span class="saas-tab-badge" id="saasCountAll">0</span>
                     </button>
-                    <button type="button" class="saas-tab" data-tab-filter="recent" id="saasTabRecent">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <button type="button" class="saas-pill-tab saas-tab" data-tab-filter="recent" id="saasTabRecent">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="10"></circle>
                             <polyline points="12 6 12 12 16 14"></polyline>
                         </svg>
                         <span>Recently Used</span>
                         <span class="saas-tab-badge" id="saasCountRecent">0</span>
                     </button>
-                </div>
-
-                <div class="saas-tab-divider"></div>
-
-                <div class="saas-categories-scroll-wrapper" id="saasCategoriesScrollWrapper">
-                    <button type="button" class="saas-scroll-btn saas-scroll-left hidden" id="saasScrollLeftBtn" title="Scroll categories left" aria-label="Scroll left">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="15 18 9 12 15 6"></polyline>
+                    <button type="button" class="saas-pill-tab saas-tab" data-tab-filter="migration" id="saasTabMigration" title="Account Migration (Bulk Import)">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="17 8 12 3 7 8"></polyline>
+                            <line x1="12" y1="3" x2="12" y2="15"></line>
                         </svg>
-                    </button>
-                    <div class="saas-tab-group saas-category-tabs" id="saasCategoryTabs">
-                        <!-- Dynamic Category Tabs -->
-                    </div>
-                    <button type="button" class="saas-scroll-btn saas-scroll-right hidden" id="saasScrollRightBtn" title="Scroll categories right" aria-label="Scroll right">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="9 18 15 12 9 6"></polyline>
-                        </svg>
+                        <span>Migration</span>
                     </button>
                 </div>
-
-                <div class="saas-more-cats-container hidden" id="saasMoreCatsContainer">
-                    <button type="button" class="saas-tab saas-more-tab" id="saasMoreCatsBtn" aria-haspopup="true" title="All Categories & Quick Switch">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <span>All (<span id="saasMoreCount">0</span>)</span>
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="saas-more-dropdown hidden" id="saasMoreCatsDropdown">
-                        <div class="saas-dropdown-header">
-                            <span class="saas-dropdown-title">Categories</span>
-                            <span class="saas-dropdown-badge" id="saasDropdownTotalBadge">0</span>
-                        </div>
-                        <div class="saas-dropdown-search">
-                            <input type="text" id="saasCatSearchInput" placeholder="Filter categories..." autocomplete="off">
-                        </div>
-                        <div class="saas-dropdown-list" id="saasMoreCatsList">
-                            <!-- Dynamic overflow categories -->
-                        </div>
-                    </div>
-                </div>
-
-                <button type="button" class="saas-tab-btn" id="saasAddCatBtn" title="New Category (Ctrl+Shift+F)">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
-                    <span>New Category</span>
-                </button>
             </nav>
 
             <!-- Main Content Area -->
@@ -357,8 +324,8 @@
                 <!-- Header Banner -->
                 <div class="content-header">
                     <div>
-                        <h1 class="view-title" id="currentViewTitle">All Passwords</h1>
-                        <p class="view-desc" id="currentViewDesc">Securely encrypted credentials stored on your local disk. Drag & drop to re-categorize.</p>
+                        <h1 class="view-title" id="currentViewTitle">Dashboard</h1>
+                        <p class="view-desc" id="currentViewDesc">Vault overview, recent activity, and category folders.</p>
                     </div>
                     <div class="action-buttons">
                         <!-- Grid vs Table View Switcher -->
@@ -385,20 +352,26 @@
                             </button>
                         </div>
 
-                        <button id="openNewCategoryModalBtn" class="btn btn-secondary category-action-btn" title="New Category (Ctrl+Shift+F)">
+                        <button type="button" id="openMigrationPageBtn" class="btn btn-secondary" title="Account Migration (Bulk Import)">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                            <span>Migration</span>
+                        </button>
+                        <button id="openNewCategoryModalBtn" class="btn btn-secondary category-action-btn" title="Add Category (Ctrl+Shift+F)">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                             </svg>
-                            <span>Category</span>
-                            <kbd class="kbd-indicator" id="newCategoryKbdBadge">Ctrl+Shift+F</kbd>
+                            <span>Add Category</span>
                         </button>
-                        <button id="openNewEntryModalBtn" class="btn btn-primary" title="Add New Password (Ctrl+Shift+A)">
+                        <button id="openNewEntryModalBtn" class="btn btn-primary" title="Add New (Ctrl+Shift+A)">
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" >
                                 <line x1="12" y1="5" x2="12" y2="19"></line>
                                 <line x1="5" y1="12" x2="19" y2="12"></line>
                             </svg>
-                            <span>Add New Password</span>
-                            <kbd class="kbd-indicator" id="newPasswordKbdBadge">Ctrl+Shift+A</kbd>
+                            <span>Add New</span>
                         </button>
                     </div>
                 </div>
@@ -420,10 +393,15 @@
                     </div>
                 </section>
 
-                <!-- Passwords Table / Grid View -->
+                <!-- Passwords Table / Grid / Folders View -->
                 <section class="entries-section">
-                    <!-- Cards Grid View (Default) -->
-                    <div class="entries-cards-grid" id="entriesCardsGrid">
+                    <!-- Category Folders Grid (Dashboard Default View) -->
+                    <div class="category-folders-grid" id="categoryFoldersGrid">
+                        <!-- Dynamic Category Folder Cards -->
+                    </div>
+
+                    <!-- Cards Grid View (Category / Recent / Search View) -->
+                    <div class="entries-cards-grid hidden" id="entriesCardsGrid">
                         <!-- Dynamic Password Cards -->
                     </div>
 
@@ -465,6 +443,232 @@
                             </svg>
                             Add New Password</button>
                     </div>
+
+                    <!-- Migration Page View -->
+                    <div id="migrationView" class="migration-container hidden">
+                        <!-- Migration Banner & Target Folder Selection -->
+                        <div class="migration-banner-card">
+                            <div class="migration-banner-header">
+                                <div class="migration-icon-wrap">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <div class="migration-banner-text">
+                                    <div class="migration-title-row">
+                                        <h2 class="migration-title">Account & Password Migration</h2>
+                                        <span class="migration-badge">Bulk Encrypted Importer</span>
+                                    </div>
+                                    <p class="migration-desc">Type your usernames and passwords or paste raw lists below. All accounts will be encrypted with AES-128 and securely stored in your default folder.</p>
+                                </div>
+                            </div>
+
+                            <div class="migration-target-config">
+                                <div class="target-config-info">
+                                    <span class="target-config-label">Target Storage Folder:</span>
+                                    <span class="target-default-pill">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                                        Default Folder (Uncategorized)
+                                    </span>
+                                </div>
+                                <div class="target-select-container">
+                                    <select id="migrationCategorySelect" class="migration-cat-select" title="Choose destination folder for migrated passwords">
+                                        <!-- Dynamically populated: Uncategorized is preselected by default -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mode Navigation Tabs -->
+                        <div class="migration-tabs-nav">
+                            <button type="button" class="migration-tab-btn active" data-mig-tab="table" id="migTabBtnTable">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="8" y1="6" x2="21" y2="6"></line>
+                                    <line x1="8" y1="12" x2="21" y2="12"></line>
+                                    <line x1="8" y1="18" x2="21" y2="18"></line>
+                                    <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                                    <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                                    <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                                </svg>
+                                <span>Interactive Table Entry</span>
+                                <span class="mig-tab-counter" id="migTabRowCount">0</span>
+                            </button>
+                            <button type="button" class="migration-tab-btn" data-mig-tab="bulk" id="migTabBtnBulk">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                                    <line x1="9" y1="20" x2="15" y2="20"></line>
+                                    <line x1="12" y1="4" x2="12" y2="20"></line>
+                                </svg>
+                                <span>Quick Paste / Raw Text</span>
+                            </button>
+                            <button type="button" class="migration-tab-btn" data-mig-tab="file" id="migTabBtnFile">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="12" y1="18" x2="12" y2="12"></line>
+                                    <line x1="9" y1="15" x2="15" y2="15"></line>
+                                </svg>
+                                <span>CSV / File Import</span>
+                            </button>
+                        </div>
+
+                        <!-- Mode 1: Interactive Table -->
+                        <div id="migrationTableMode" class="migration-mode-panel">
+                            <div class="migration-table-actions-strip">
+                                <div class="action-strip-left">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="migAddRowBtn">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                                        <span>Add Row</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="migAdd5RowsBtn">
+                                        <span>+ Add 5 Rows</span>
+                                    </button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="migFillMissingPwBtn" title="Generate secure random passwords for rows with empty passwords">
+                                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path></svg>
+                                        <span>Generate Blank Passwords</span>
+                                    </button>
+                                </div>
+                                <div class="action-strip-right">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="migCleanEmptyBtn" title="Remove blank/empty rows">Clean Empty Rows</button>
+                                    <button type="button" class="btn btn-secondary btn-sm text-danger" id="migClearAllBtn">Clear All</button>
+                                </div>
+                            </div>
+
+                            <div class="migration-grid-card">
+                                <div class="table-responsive">
+                                    <table class="migration-grid-table" id="migrationGridTable">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 36px; text-align: center;">#</th>
+                                                <th style="width: 22%;">Account / Service</th>
+                                                <th style="width: 32%;">Username or Email <span class="mig-required">*</span></th>
+                                                <th style="width: 32%;">Password <span class="mig-required">*</span></th>
+                                                <th style="width: 14%;">Notes (Optional)</th>
+                                                <th style="width: 44px; text-align: center;"></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="migrationTableBody">
+                                            <!-- Dynamically generated rows -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="migration-grid-hint">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                                    <span>Keyboard shortcut: In the password field of the last row, press <kbd>Tab</kbd> or <kbd>Enter</kbd> to automatically add another row!</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mode 2: Quick Paste / Raw Text -->
+                        <div id="migrationBulkMode" class="migration-mode-panel hidden">
+                            <div class="migration-bulk-card">
+                                <div class="bulk-card-header">
+                                    <div>
+                                        <h3 class="bulk-heading">Paste Usernames & Passwords</h3>
+                                        <p class="bulk-subheading">Type or paste multiple lines. Each line can be <code>username, password</code> or <code>service, username, password</code> or <code>username:password</code></p>
+                                    </div>
+                                    <div class="bulk-delimiter-selector">
+                                        <label for="migDelimiterSelect">Separator:</label>
+                                        <select id="migDelimiterSelect" class="form-input form-input-sm">
+                                            <option value="auto">Auto-Detect</option>
+                                            <option value=",">Comma (,)</option>
+                                            <option value=":">Colon (:)</option>
+                                            <option value="\t">Tab</option>
+                                            <option value="|">Pipe (|)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <textarea id="migBulkTextarea" class="migration-bulk-textarea" rows="9" placeholder="username@gmail.com, MySecurePassword123!&#10;github_user: DevPass$2026&#10;Netflix, alex.home@gmail.com, MovieStream#99&#10;admin_corp, K9#mPx!9922, Internal portal"></textarea>
+                                <div class="bulk-card-footer">
+                                    <button type="button" class="btn btn-secondary btn-sm" id="migSampleDataBtn">Insert Sample Template</button>
+                                    <button type="button" class="btn btn-primary btn-sm" id="migParseBulkBtn">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+                                        <span>Parse into Table</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Mode 3: CSV File Import -->
+                        <div id="migrationFileMode" class="migration-mode-panel hidden">
+                            <div class="migration-dropzone-card" id="migDropZone">
+                                <input type="file" id="migFileInput" accept=".csv,.txt" class="hidden">
+                                <div class="dropzone-icon-circle">
+                                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                </div>
+                                <h3 class="dropzone-title">Drop your CSV or Text file here</h3>
+                                <p class="dropzone-desc">Compatible with Chrome, Firefox, Bitwarden, 1Password, or standard CSV files.</p>
+                                <button type="button" class="btn btn-secondary" id="migBrowseFileBtn">Browse Files</button>
+                                <div id="migFileFeedback" class="dropzone-feedback hidden"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sticky Execution Summary Bar -->
+                        <div class="migration-summary-bar">
+                            <div class="summary-pills-row">
+                                <div class="summary-pill">
+                                    <span class="summary-pill-label">Total Rows:</span>
+                                    <span class="summary-pill-val" id="migSummaryTotal">0</span>
+                                </div>
+                                <div class="summary-pill is-active-count">
+                                    <span class="summary-dot"></span>
+                                    <span class="summary-pill-label">Ready to Save:</span>
+                                    <span class="summary-pill-val" id="migSummaryReady">0</span>
+                                </div>
+                                <div class="summary-pill is-dest">
+                                    <span class="summary-pill-label">Destination:</span>
+                                    <span class="summary-pill-val" id="migSummaryDest">Default Folder (Uncategorized)</span>
+                                </div>
+                            </div>
+
+                            <div class="summary-actions-row">
+                                <button type="button" class="btn btn-secondary" id="migBackToVaultBtn">Back to Dashboard</button>
+                                <button type="button" class="btn btn-primary btn-save-migration" id="migSaveAllSubmitBtn" disabled>
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4">
+                                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                                        <polyline points="7 3 7 8 15 8"></polyline>
+                                    </svg>
+                                    <span id="migSaveSubmitBtnText">Save All to Default Folder</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Progress Overlay -->
+                        <div id="migProgressBox" class="migration-progress-box hidden">
+                            <div class="mig-spinner"></div>
+                            <div class="mig-progress-content">
+                                <h4 class="mig-progress-title" id="migProgressTitle">Encrypting and saving credentials...</h4>
+                                <div class="mig-progress-track">
+                                    <div class="mig-progress-fill" id="migProgressFill" style="width: 0%;"></div>
+                                </div>
+                                <span class="mig-progress-status" id="migProgressStatus">Processing 0 of 0...</span>
+                            </div>
+                        </div>
+
+                        <!-- Success Celebratory Banner -->
+                        <div id="migSuccessBox" class="migration-success-box hidden">
+                            <div class="success-badge-icon">
+                                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>
+                            </div>
+                            <div class="success-box-details">
+                                <h3 class="success-box-title">Migration Completed Successfully!</h3>
+                                <p class="success-box-desc" id="migSuccessDetails">All credentials have been securely encrypted and stored in your default folder.</p>
+                                <div class="success-box-btns">
+                                    <button type="button" class="btn btn-primary btn-sm" id="migViewImportedBtn">View in Dashboard</button>
+                                    <button type="button" class="btn btn-secondary btn-sm" id="migImportMoreBtn">Migrate More Passwords</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
             </main>
         </div>
@@ -493,6 +697,35 @@
                     <label for="newCatNameInput">Category Name</label>
                     <input type="text" id="newCatNameInput" placeholder="e.g. Gaming, Office, Entertainment, Banking" required autofocus autocomplete="off">
                 </div>
+                <div class="form-group">
+                    <label>Category Icon <span class="text-muted text-xs" style="font-weight: normal;">(Optional — default: 📁 Folder)</span></label>
+                    <div class="category-icon-picker-wrap">
+                        <div class="category-icon-preview" id="newCatIconPreview">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" id="newCatIconInput" class="category-icon-input" placeholder="Type/paste emoji or choose below" maxlength="4" autocomplete="off">
+                        <button type="button" class="btn btn-secondary btn-xs btn-emoji-trigger" id="newCatEmojiPickerBtn" title="Open full emoji library (600+ emojis)">🌟 Browse All</button>
+                        <button type="button" class="btn btn-secondary btn-xs" id="newCatClearIconBtn" title="Reset to default Folder icon">Default</button>
+                    </div>
+                    <div class="category-icon-presets" id="newCatIconPresets">
+                        <button type="button" class="cat-icon-chip" data-icon="📁" title="Folder (Default)">📁</button>
+                        <button type="button" class="cat-icon-chip" data-icon="💼" title="Work / Office">💼</button>
+                        <button type="button" class="cat-icon-chip" data-icon="💻" title="Tech / Dev">💻</button>
+                        <button type="button" class="cat-icon-chip" data-icon="💳" title="Finance / Banking">💳</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🎮" title="Gaming">🎮</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🌐" title="Social / Web">🌐</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🔒" title="Security / Vault">🔒</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🛒" title="Shopping">🛒</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🎬" title="Media / Streaming">🎬</button>
+                        <button type="button" class="cat-icon-chip" data-icon="📱" title="Mobile / Apps">📱</button>
+                        <button type="button" class="cat-icon-chip" data-icon="☁️" title="Cloud / DevOps">☁️</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🔑" title="Keys / Credentials">🔑</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🏠" title="Personal / Home">🏠</button>
+                        <button type="button" class="cat-icon-chip" data-icon="⚡" title="Utilities">⚡</button>
+                    </div>
+                </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary modal-close-btn" data-close="newCatModal">Cancel</button>
                     <button type="submit" class="btn btn-primary">Create Category</button>
@@ -507,7 +740,7 @@
             <div class="modal-header">
                 <div>
                     <h2 class="modal-title">Edit Category</h2>
-                    <p class="modal-subtitle">Rename this category folder.</p>
+                    <p class="modal-subtitle">Update name and optional icon.</p>
                 </div>
                 <button class="btn-close modal-close-btn" data-close="editCatModal" aria-label="Close modal">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
@@ -519,8 +752,37 @@
             <form id="editCatForm" class="modal-form">
                 <input type="hidden" id="editCatOldNameInput" value="">
                 <div class="form-group">
-                    <label for="editCatNewNameInput">New Category Name</label>
+                    <label for="editCatNewNameInput">Category Name</label>
                     <input type="text" id="editCatNewNameInput" placeholder="Enter updated category name..." required autofocus autocomplete="off">
+                </div>
+                <div class="form-group">
+                    <label>Category Icon <span class="text-muted text-xs" style="font-weight: normal;">(Optional — default: 📁 Folder)</span></label>
+                    <div class="category-icon-picker-wrap">
+                        <div class="category-icon-preview" id="editCatIconPreview">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                            </svg>
+                        </div>
+                        <input type="text" id="editCatIconInput" class="category-icon-input" placeholder="Type/paste emoji or choose below" maxlength="4" autocomplete="off">
+                        <button type="button" class="btn btn-secondary btn-xs btn-emoji-trigger" id="editCatEmojiPickerBtn" title="Open full emoji library (600+ emojis)">🌟 Browse All</button>
+                        <button type="button" class="btn btn-secondary btn-xs" id="editCatClearIconBtn" title="Reset to default Folder icon">Default</button>
+                    </div>
+                    <div class="category-icon-presets" id="editCatIconPresets">
+                        <button type="button" class="cat-icon-chip" data-icon="📁" title="Folder (Default)">📁</button>
+                        <button type="button" class="cat-icon-chip" data-icon="💼" title="Work / Office">💼</button>
+                        <button type="button" class="cat-icon-chip" data-icon="💻" title="Tech / Dev">💻</button>
+                        <button type="button" class="cat-icon-chip" data-icon="💳" title="Finance / Banking">💳</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🎮" title="Gaming">🎮</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🌐" title="Social / Web">🌐</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🔒" title="Security / Vault">🔒</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🛒" title="Shopping">🛒</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🎬" title="Media / Streaming">🎬</button>
+                        <button type="button" class="cat-icon-chip" data-icon="📱" title="Mobile / Apps">📱</button>
+                        <button type="button" class="cat-icon-chip" data-icon="☁️" title="Cloud / DevOps">☁️</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🔑" title="Keys / Credentials">🔑</button>
+                        <button type="button" class="cat-icon-chip" data-icon="🏠" title="Personal / Home">🏠</button>
+                        <button type="button" class="cat-icon-chip" data-icon="⚡" title="Utilities">⚡</button>
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary modal-close-btn" data-close="editCatModal">Cancel</button>
@@ -627,6 +889,7 @@
                             <button type="button" class="avatar-chip" data-avatar="emoji:⭐" title="Favorite">⭐</button>
                             <button type="button" class="avatar-chip" data-avatar="emoji:☁️" title="Cloud">☁️</button>
                             <button type="button" class="avatar-chip" data-avatar="emoji:🛡️" title="Shield">🛡️</button>
+                            <button type="button" class="avatar-chip" id="entryEmojiPickerBtn" title="Open full emoji library (600+ emojis)" style="font-weight: 600;">🌟 Browse All</button>
                         </div>
                         <input type="text" class="avatar-custom-input" id="avatarCustomInput" placeholder="Custom emoji..." maxlength="6" title="Enter custom emoji">
                     </div>
@@ -1692,9 +1955,76 @@
         </button>
     </div>
 
+    <!-- Rich Emoji Picker Modal (600+ categorized emojis + Full Unicode Library support) -->
+    <div id="emojiPickerModal" class="modal-backdrop hidden">
+        <div class="modal-window emoji-picker-modal-window">
+            <div class="emoji-picker-header">
+                <div>
+                    <h2 class="modal-title" id="emojiPickerModalTitle" style="font-size: 15px;">Choose Icon & Emoji</h2>
+                    <p class="modal-subtitle" style="font-size: 11.5px;">Select from over 600+ icons or use full library</p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <button type="button" class="btn btn-secondary btn-xs" id="emojiPickerTabToggle" style="display: none;">📚 Full Unicode Catalog</button>
+                    <button class="btn-close" id="emojiPickerCloseBtn" aria-label="Close emoji picker">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Built-in Fast Categorized & Searchable Library -->
+            <div id="emojiPickerBuiltInWrap">
+                <div class="emoji-picker-search-bar">
+                    <input type="text" id="emojiPickerSearchInput" placeholder="Search emojis... (e.g. game, card, cloud, lock, key, code)" autocomplete="off">
+                    <button type="button" class="emoji-search-clear-btn" id="emojiPickerClearSearchBtn" title="Clear search">&times;</button>
+                </div>
+                <div class="emoji-cat-tabs-row" id="emojiPickerCategories"></div>
+                <div class="emoji-picker-body">
+                    <div class="emoji-picker-grid" id="emojiPickerGrid"></div>
+                </div>
+            </div>
+
+            <!-- Web Component Container (emoji-picker-element) -->
+            <div id="emojiPickerWebComponentWrap" style="display: none; padding: 0;"></div>
+
+            <div class="emoji-picker-footer">
+                <span>Tip: Click any emoji to instantly apply</span>
+                <span class="text-xs">Supports all Unicode symbols</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Confirmation Modal (Replaces browser confirm dialogs) -->
+    <div id="genericConfirmModal" class="modal-backdrop hidden">
+        <div class="modal-window modal-sm">
+            <div class="modal-header">
+                <div>
+                    <h2 class="modal-title" id="genericConfirmTitle">Confirm Action</h2>
+                    <p class="modal-subtitle" id="genericConfirmSubtitle">Please confirm to proceed.</p>
+                </div>
+                <button class="btn-close modal-close-btn" data-close="genericConfirmModal" aria-label="Close modal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+            <div class="modal-form">
+                <p id="genericConfirmMessage" style="font-size: 0.9rem; margin-bottom: 16px; color: var(--text-primary); line-height: 1.5;"></p>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary modal-close-btn" data-close="genericConfirmModal" id="genericConfirmCancelBtn">Cancel</button>
+                    <button type="button" id="genericConfirmOkBtn" class="btn btn-danger">Confirm</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast Notification Container -->
     <div id="toastContainer" class="toast-container"></div>
 
+    <script src="emoji-library.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

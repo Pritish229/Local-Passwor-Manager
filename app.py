@@ -11,15 +11,32 @@ import urllib.parse
 from typing import Optional
 from cryptography.fernet import Fernet
 
+# Safe standard output handling when running without console (--noconsole / frozen)
+if sys.stdout is None:
+    try:
+        sys.stdout = open(os.devnull, 'w')
+    except Exception:
+        pass
+if sys.stderr is None:
+    try:
+        sys.stderr = open(os.devnull, 'w')
+    except Exception:
+        pass
+
 import vault_crypto
 
-# Base directory determination
+# Base directory & static directory determination
 if getattr(sys, 'frozen', False):
-    BASE_DIR = Path(sys.executable).resolve().parent
+    BUNDLE_DIR = Path(getattr(sys, '_MEIPASS', sys.executable)).resolve()
+    DATA_DIR = Path(sys.executable).resolve().parent
+    STATIC_DIR = BUNDLE_DIR / "static"
+    if not STATIC_DIR.is_dir():
+        STATIC_DIR = DATA_DIR / "static"
 else:
-    BASE_DIR = Path(__file__).resolve().parent
+    DATA_DIR = Path(__file__).resolve().parent
+    STATIC_DIR = DATA_DIR / "static"
 
-STATIC_DIR = BASE_DIR / "static"
+BASE_DIR = DATA_DIR
 
 import base64
 import secrets
@@ -43,6 +60,7 @@ DEFAULT_PREFERENCES = {
     "theme": "dark",
     "view_mode": "grid",
     "sidebar_collapsed": False,
+    "category_icons": {},
     "button_colors": {
         "dark": {
             "primary_bg": "#ffffff",
@@ -89,7 +107,9 @@ def load_preferences() -> dict:
                 return json.loads(json.dumps(DEFAULT_PREFERENCES))
             merged = json.loads(json.dumps(DEFAULT_PREFERENCES))
             for k, v in data.items():
-                if k in merged and isinstance(v, dict) and isinstance(merged[k], dict):
+                if k == "category_icons":
+                    merged[k] = v if isinstance(v, dict) else {}
+                elif k in merged and isinstance(v, dict) and isinstance(merged[k], dict):
                     merged[k].update(v)
                 else:
                     merged[k] = v
@@ -102,7 +122,9 @@ def save_preferences(data: dict) -> dict:
         data = {}
     current = load_preferences()
     for k, v in data.items():
-        if k in current and isinstance(v, dict) and isinstance(current[k], dict):
+        if k == "category_icons":
+            current[k] = v if isinstance(v, dict) else {}
+        elif k in current and isinstance(v, dict) and isinstance(current[k], dict):
             current[k].update(v)
         else:
             current[k] = v
@@ -398,6 +420,20 @@ class VaultRequestHandler(SimpleHTTPRequestHandler):
                 avatar=avatar
             )
             self._send_json(HTTPStatus.CREATED, {"success": True, "entry": saved})
+            return
+
+        if path == "/api/entries/bulk":
+            if session.vault_fernet is None:
+                self._send_json(HTTPStatus.UNAUTHORIZED, {"error": "Vault is locked."})
+                return
+            body = self._read_json_body()
+            entries = body.get("entries", [])
+            target_category = body.get("category", "Uncategorized").strip() or "Uncategorized"
+            if not isinstance(entries, list):
+                self._send_json(HTTPStatus.BAD_REQUEST, {"error": "Entries must be a list."})
+                return
+            saved = vault_crypto.bulk_add_entries(session.vault_fernet, entries, target_category)
+            self._send_json(HTTPStatus.CREATED, {"success": True, "count": len(saved), "entries": saved})
             return
 
         if path == "/api/recent":
@@ -779,9 +815,76 @@ class VaultRequestHandler(SimpleHTTPRequestHandler):
         self._send_json(HTTPStatus.NOT_FOUND, {"error": "Endpoint not found."})
 
 
-def run_server(port: int = 5432, open_browser: bool = True):
-    server_address = ("127.0.0.1", port)
+import subprocess
+
+def launch_desktop_window(url: str):
+    """
+    Launch application in standalone desktop window mode.
+    Disables browser address bar, navigation buttons, and bookmarks tab strip.
+    """
+    candidates = [
+        os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%LOCALAPPDATA%\Microsoft\Edge\Application\msedge.exe"),
+        os.path.expandvars(r"%ProgramFiles%\Google\Chrome\Application\chrome.exe"),
+        os.path.expandvars(r"%ProgramFiles(x86)%\Google\Chrome\Application\chrome.exe"),
+        os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
+    ]
     
+    app_profile = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'VaultKey', 'AppProfile')
+    try:
+        os.makedirs(app_profile, exist_ok=True)
+    except Exception:
+        pass
+
+    for exe in candidates:
+        if os.path.isfile(exe):
+            try:
+                cmd = [
+                    exe,
+                    f"--app={url}",
+                    f"--user-data-dir={app_profile}",
+                    "--no-first-run",
+                    "--no-default-browser-check",
+                    "--disable-features=Translate,OptimizationHints,MediaRouter",
+                    "--disable-infobars",
+                    "--disable-component-update",
+                    "--disable-notifications",
+                    "--window-size=1300,850",
+                ]
+                return subprocess.Popen(cmd)
+            except Exception:
+                pass
+
+    try:
+        webbrowser.open(url)
+    except Exception:
+        pass
+    return None
+
+
+def check_existing_server(port: int = 5432) -> Optional[str]:
+    """Check if a VaultKey local server is already running."""
+    import urllib.request
+    for p in range(port, port + 10):
+        try:
+            req = urllib.request.Request(f"http://127.0.0.1:{p}/api/health", headers={"User-Agent": "VaultKeyLauncher"})
+            with urllib.request.urlopen(req, timeout=0.6) as resp:
+                if resp.status == 200:
+                    return f"http://127.0.0.1:{p}"
+        except Exception:
+            continue
+    return None
+
+
+def run_server(port: int = 5432, open_browser: bool = True):
+    # Check if VaultKey is already running
+    existing_url = check_existing_server(port)
+    if existing_url:
+        if open_browser:
+            launch_desktop_window(existing_url)
+        return
+
     # Try port, or increment if busy
     max_attempts = 10
     httpd = None
@@ -795,26 +898,16 @@ def run_server(port: int = 5432, open_browser: bool = True):
             continue
 
     if not httpd:
-        print(f"Error: Could not bind to port {port} after {max_attempts} attempts.")
         sys.exit(1)
 
     url = f"http://127.0.0.1:{actual_port}"
-    print("=" * 60)
-    print(">> VaultKey - Local Password Manager (SaaS Dashboard)")
-    print(f">> Running securely at: {url}")
-    print(">> Press Ctrl+C in terminal to stop.")
-    print("=" * 60)
 
     if open_browser:
-        try:
-            webbrowser.open(url)
-        except Exception:
-            pass
+        launch_desktop_window(url)
 
     try:
         httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nStopping Password Manager server... Goodbye!")
+    except (KeyboardInterrupt, SystemExit):
         httpd.server_close()
 
 

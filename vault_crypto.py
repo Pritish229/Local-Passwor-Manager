@@ -327,6 +327,81 @@ def add_or_update_entry(
     }
 
 
+def bulk_add_entries(
+    fernet: Fernet,
+    entries: List[Dict[str, Any]],
+    target_category: str = "Uncategorized"
+) -> List[Dict[str, Any]]:
+    """Bulk adds multiple credential entries in a single atomic file write."""
+    raw = load_raw_store()
+    target_category = (target_category or "").strip() or "Uncategorized"
+
+    if target_category not in raw or not isinstance(raw[target_category], list):
+        raw[target_category] = []
+
+    import time
+    now_ts = int(time.time())
+    created_list = []
+
+    for item in entries:
+        uname = str(item.get("uname", "")).strip()
+        pw = str(item.get("password", "") or item.get("pw", ""))
+        if not uname or not pw:
+            continue
+
+        title = (item.get("title") or uname or target_category).strip()
+        cat = (item.get("category") or target_category).strip() or target_category
+
+        if cat not in raw or not isinstance(raw[cat], list):
+            raw[cat] = []
+
+        encrypted_pw = fernet.encrypt(pw.encode()).decode()
+        new_id = f"entry_{now_ts}_{os.urandom(4).hex()}"
+
+        custom_fields = item.get("custom_fields", [])
+        encrypted_fields = []
+        if custom_fields:
+            for f in custom_fields:
+                fname = str(f.get("name", "")).strip()
+                fval = str(f.get("value", ""))
+                is_secret = bool(f.get("is_secret", False))
+                if not fname:
+                    continue
+                if is_secret and fval:
+                    val_to_save = fernet.encrypt(fval.encode()).decode()
+                else:
+                    val_to_save = fval
+                encrypted_fields.append({
+                    "name": fname,
+                    "value": val_to_save,
+                    "is_secret": is_secret
+                })
+
+        entry_data = {
+            "id": new_id,
+            "title": title,
+            "uname": uname,
+            "pw": encrypted_pw,
+            "custom_fields": encrypted_fields,
+            "avatar": item.get("avatar") or None,
+            "created_at": now_ts,
+            "updated_at": now_ts
+        }
+
+        raw[cat].append(entry_data)
+        created_list.append({
+            "id": new_id,
+            "title": title,
+            "uname": uname,
+            "category": cat
+        })
+
+    if created_list:
+        save_raw_store(raw)
+
+    return created_list
+
+
 def create_category(category_name: str) -> Tuple[bool, List[str]]:
     """Creates a new category if it doesn't already exist."""
     raw = load_raw_store()

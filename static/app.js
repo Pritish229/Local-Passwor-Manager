@@ -13,12 +13,168 @@
 (function () {
     'use strict';
 
+    // ==========================================
+    // DESKTOP APP MODE SHIELD
+    // 1. Disable browser context menu (Image 1)
+    // 2. Disable native dialog boxes (alert, confirm, prompt)
+    // 3. Disable console logging & DevTools shortcuts
+    // ==========================================
+    (() => {
+        // Suppress browser dialog boxes
+        window.alert = function () {};
+        window.prompt = function () { return null; };
+        window.onbeforeunload = null;
+        window.addEventListener('beforeunload', function (e) {
+            delete e['returnValue'];
+        });
+
+        // Suppress browser console output
+        const noop = function () {};
+        window.console = {
+            log: noop,
+            info: noop,
+            warn: noop,
+            error: noop,
+            debug: noop,
+            trace: noop,
+            dir: noop,
+            dirxml: noop,
+            group: noop,
+            groupCollapsed: noop,
+            groupEnd: noop,
+            time: noop,
+            timeEnd: noop,
+            timeLog: noop,
+            assert: noop,
+            clear: noop,
+            count: noop,
+            countReset: noop
+        };
+
+        // Suppress browser right-click context menu (Image 1)
+        document.addEventListener('contextmenu', function (e) {
+            // Permit custom in-app category right-click menu
+            if (e.target && (e.target.closest('.category-nav-item') || e.target.closest('#categoryContextMenu'))) {
+                return;
+            }
+            e.preventDefault();
+            e.stopPropagation();
+            return false;
+        }, { capture: true });
+
+        // Suppress browser navigation and devtools shortcuts
+        window.addEventListener('keydown', function (e) {
+            // F12 (DevTools)
+            if (e.key === 'F12' || e.keyCode === 123) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+Shift+I / Ctrl+Shift+J / Ctrl+Shift+C (Inspect / Console)
+            if (e.ctrlKey && e.shiftKey && ['I', 'i', 'J', 'j', 'C', 'c'].includes(e.key)) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+U (View Source)
+            if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+S (Save Page)
+            if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+P (Print)
+            if (e.ctrlKey && (e.key === 'p' || e.key === 'P')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Ctrl+R / F5 (Browser Reload)
+            if ((e.ctrlKey && (e.key === 'r' || e.key === 'R')) || e.key === 'F5') {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Alt+Left / Alt+Right (Browser History Back/Forward)
+            if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+            // Backspace outside input/textarea
+            if (e.key === 'Backspace') {
+                const tag = (e.target.tagName || '').toLowerCase();
+                const isEditable = e.target.isContentEditable || tag === 'input' || tag === 'textarea';
+                if (!isEditable) {
+                    e.preventDefault();
+                    return false;
+                }
+            }
+        }, { capture: true });
+
+        // Prevent dragging images/links to navigate
+        document.addEventListener('dragstart', function (e) {
+            if (e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'A')) {
+                e.preventDefault();
+            }
+        });
+    })();
+
+    // In-app Custom Confirmation Dialog (Replaces native browser confirm())
+    function confirmAction(message, options = {}) {
+        return new Promise((resolve) => {
+            const modal = document.getElementById('genericConfirmModal');
+            const titleEl = document.getElementById('genericConfirmTitle');
+            const subtitleEl = document.getElementById('genericConfirmSubtitle');
+            const msgEl = document.getElementById('genericConfirmMessage');
+            const okBtn = document.getElementById('genericConfirmOkBtn');
+            const cancelBtn = document.getElementById('genericConfirmCancelBtn');
+
+            if (!modal) {
+                resolve(true);
+                return;
+            }
+
+            titleEl.textContent = options.title || 'Confirm Action';
+            if (subtitleEl) subtitleEl.textContent = options.subtitle || 'Please confirm to proceed.';
+            msgEl.textContent = message;
+            okBtn.textContent = options.confirmText || 'Confirm';
+            okBtn.className = options.isDanger !== false ? 'btn btn-danger' : 'btn btn-primary';
+
+            function cleanup() {
+                modal.classList.add('hidden');
+                okBtn.removeEventListener('click', onOk);
+                cancelBtn.removeEventListener('click', onCancel);
+            }
+
+            function onOk() {
+                cleanup();
+                resolve(true);
+            }
+
+            function onCancel() {
+                cleanup();
+                resolve(false);
+            }
+
+            okBtn.addEventListener('click', onOk);
+            cancelBtn.addEventListener('click', onCancel);
+            modal.classList.remove('hidden');
+        });
+    }
+
     // Default Preferences
     const DEFAULT_PREFERENCES = {
         layout: 'classic',
         theme: 'dark', // 'dark', 'light', 'system'
         sidebar_collapsed: false,
         view_mode: 'grid', // 'grid' | 'table'
+        category_icons: {},
         button_colors: {
             dark: {
                 primary_bg: '#ffffff',
@@ -146,6 +302,7 @@
         viewModeToggleGroup: document.getElementById('viewModeToggleGroup'),
         viewModeGridBtn: document.getElementById('viewModeGridBtn'),
         viewModeTableBtn: document.getElementById('viewModeTableBtn'),
+        categoryFoldersGrid: document.getElementById('categoryFoldersGrid'),
         entriesCardsGrid: document.getElementById('entriesCardsGrid'),
         entriesTableContainer: document.getElementById('entriesTableContainer'),
 
@@ -159,10 +316,20 @@
         newCatModal: document.getElementById('newCatModal'),
         newCatForm: document.getElementById('newCatForm'),
         newCatNameInput: document.getElementById('newCatNameInput'),
+        newCatIconInput: document.getElementById('newCatIconInput'),
+        newCatIconPreview: document.getElementById('newCatIconPreview'),
+        newCatClearIconBtn: document.getElementById('newCatClearIconBtn'),
+        newCatIconPresets: document.getElementById('newCatIconPresets'),
         editCatModal: document.getElementById('editCatModal'),
         editCatForm: document.getElementById('editCatForm'),
         editCatOldNameInput: document.getElementById('editCatOldNameInput'),
         editCatNewNameInput: document.getElementById('editCatNewNameInput'),
+        editCatIconInput: document.getElementById('editCatIconInput'),
+        editCatIconPreview: document.getElementById('editCatIconPreview'),
+        editCatClearIconBtn: document.getElementById('editCatClearIconBtn'),
+        editCatIconPresets: document.getElementById('editCatIconPresets'),
+        newCatEmojiPickerBtn: document.getElementById('newCatEmojiPickerBtn'),
+        editCatEmojiPickerBtn: document.getElementById('editCatEmojiPickerBtn'),
 
         // Delete Confirmation Modal
         deleteConfirmModal: document.getElementById('deleteConfirmModal'),
@@ -185,6 +352,7 @@
         avatarPreviewLabel: document.getElementById('avatarPreviewLabel'),
         avatarPresetChips: document.getElementById('avatarPresetChips'),
         avatarCustomInput: document.getElementById('avatarCustomInput'),
+        entryEmojiPickerBtn: document.getElementById('entryEmojiPickerBtn'),
         formUsername: document.getElementById('formUsername'),
         formPassword: document.getElementById('formPassword'),
         strengthBar: document.getElementById('strengthBar'),
@@ -338,6 +506,48 @@
         saveSharingSettingsBtn: document.getElementById('saveSharingSettingsBtn'),
         activeSharesList: document.getElementById('activeSharesList'),
         noActiveSharesNotice: document.getElementById('noActiveSharesNotice'),
+
+        // Migration Page Elements
+        sidebarMigrationNavBtn: document.getElementById('sidebarMigrationNavBtn'),
+        saasTabMigration: document.getElementById('saasTabMigration'),
+        openMigrationPageBtn: document.getElementById('openMigrationPageBtn'),
+        migrationView: document.getElementById('migrationView'),
+        migrationCategorySelect: document.getElementById('migrationCategorySelect'),
+        migTabBtnTable: document.getElementById('migTabBtnTable'),
+        migTabBtnBulk: document.getElementById('migTabBtnBulk'),
+        migTabBtnFile: document.getElementById('migTabBtnFile'),
+        migrationTableMode: document.getElementById('migrationTableMode'),
+        migrationBulkMode: document.getElementById('migrationBulkMode'),
+        migrationFileMode: document.getElementById('migrationFileMode'),
+        migTabRowCount: document.getElementById('migTabRowCount'),
+        migrationTableBody: document.getElementById('migrationTableBody'),
+        migAddRowBtn: document.getElementById('migAddRowBtn'),
+        migAdd5RowsBtn: document.getElementById('migAdd5RowsBtn'),
+        migFillMissingPwBtn: document.getElementById('migFillMissingPwBtn'),
+        migCleanEmptyBtn: document.getElementById('migCleanEmptyBtn'),
+        migClearAllBtn: document.getElementById('migClearAllBtn'),
+        migBulkTextarea: document.getElementById('migBulkTextarea'),
+        migDelimiterSelect: document.getElementById('migDelimiterSelect'),
+        migSampleDataBtn: document.getElementById('migSampleDataBtn'),
+        migParseBulkBtn: document.getElementById('migParseBulkBtn'),
+        migDropZone: document.getElementById('migDropZone'),
+        migFileInput: document.getElementById('migFileInput'),
+        migBrowseFileBtn: document.getElementById('migBrowseFileBtn'),
+        migFileFeedback: document.getElementById('migFileFeedback'),
+        migSummaryTotal: document.getElementById('migSummaryTotal'),
+        migSummaryReady: document.getElementById('migSummaryReady'),
+        migSummaryDest: document.getElementById('migSummaryDest'),
+        migBackToVaultBtn: document.getElementById('migBackToVaultBtn'),
+        migSaveAllSubmitBtn: document.getElementById('migSaveAllSubmitBtn'),
+        migSaveSubmitBtnText: document.getElementById('migSaveSubmitBtnText'),
+        migProgressBox: document.getElementById('migProgressBox'),
+        migProgressTitle: document.getElementById('migProgressTitle'),
+        migProgressFill: document.getElementById('migProgressFill'),
+        migProgressStatus: document.getElementById('migProgressStatus'),
+        migSuccessBox: document.getElementById('migSuccessBox'),
+        migSuccessDetails: document.getElementById('migSuccessDetails'),
+        migViewImportedBtn: document.getElementById('migViewImportedBtn'),
+        migImportMoreBtn: document.getElementById('migImportMoreBtn'),
 
         toastContainer: document.getElementById('toastContainer')
     };
@@ -560,6 +770,31 @@
         renderTable();
     }
 
+    // ==================== CATEGORY ICON HELPERS ====================
+    function getCategoryIcon(catName) {
+        if (!catName) return '📁';
+        const icons = (state.preferences && state.preferences.category_icons) || {};
+        const trimmed = String(catName).trim();
+        if (icons[trimmed]) return icons[trimmed];
+        if (icons[catName]) return icons[catName];
+        // Case-insensitive lookup fallback
+        const lower = trimmed.toLowerCase();
+        for (const [k, v] of Object.entries(icons)) {
+            if (String(k).trim().toLowerCase() === lower) return v;
+        }
+        return '📁';
+    }
+
+    function getCategoryIconHtml(catName, extraClass = '') {
+        const icon = getCategoryIcon(catName);
+        if (!icon || icon === '📁') {
+            return `<svg class="cat-icon-svg ${extraClass}" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>`;
+        }
+        return `<span class="cat-icon-emoji ${extraClass}">${escapeHtml(icon)}</span>`;
+    }
+
     // ==================== BRAND ICONS & AVATAR GENERATION ====================
     const BRAND_ICONS = {
         steam: `<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor"><path d="M11.979 0C5.678 0 .511 4.86.022 11.037l6.432 2.658c.545-.371 1.203-.59 1.912-.59.063 0 .125.004.188.006l2.861-4.142V8.91c0-2.495 2.028-4.524 4.524-4.524 2.495 0 4.524 2.029 4.524 4.524s-2.029 4.524-4.524 4.524a4.53 4.53 0 0 1-1.777-.363l-4.086 2.91a2.91 2.91 0 0 1 .006.195c0 1.611-1.312 2.924-2.924 2.924-1.397 0-2.569-.982-2.859-2.289L.375 14.542C1.724 20.021 6.386 24 11.979 24c6.627 0 12-5.373 12-12s-5.373-12-12-12zm-3.613 16.035c-.947 0-1.716-.768-1.716-1.715 0-.948.769-1.716 1.716-1.716.947 0 1.715.768 1.715 1.716 0 .947-.768 1.715-1.715 1.715zm7.573-4.83c-1.25 0-2.262-1.012-2.262-2.262 0-1.25 1.012-2.262 2.262-2.262 1.25 0 2.262 1.012 2.262 2.262 0 1.25-1.012 2.262-2.262 2.262z"/></svg>`,
@@ -622,6 +857,32 @@
         return `<div class="card-avatar avatar-letter">${escapeHtml(letter)}</div>`;
     }
 
+    // Common category context menu trigger (Sidebar & Folder Cards)
+    function showCategoryMenu(e, cat, count, isSystem) {
+        e.preventDefault();
+        e.stopPropagation();
+        const liveCount = (state.entries || []).filter(item => (item.category || 'Uncategorized').toLowerCase() === cat.toLowerCase()).length;
+        state.contextCategory = { cat, count: liveCount, isSystem };
+
+        if (elements.contextDeleteCategoryBtn) {
+            if (isSystem || liveCount > 0) {
+                elements.contextDeleteCategoryBtn.classList.add('disabled');
+                elements.contextDeleteCategoryBtn.setAttribute('title', isSystem ? 'System category cannot be deleted' : `Cannot delete: contains ${liveCount} credential(s) (only empty categories can be deleted)`);
+            } else {
+                elements.contextDeleteCategoryBtn.classList.remove('disabled');
+                elements.contextDeleteCategoryBtn.removeAttribute('title');
+            }
+        }
+
+        const menuWidth = 160;
+        const menuHeight = 85;
+        const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8);
+        const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8);
+        elements.categoryContextMenu.style.left = `${Math.max(8, x)}px`;
+        elements.categoryContextMenu.style.top = `${Math.max(8, y)}px`;
+        elements.categoryContextMenu.classList.remove('hidden');
+    }
+
     // Render Categories & Setup Drop Targets with Overflow Management (Issue 1)
     function renderCategories() {
         elements.categoryNavList.innerHTML = '';
@@ -637,21 +898,6 @@
         if (!allCats.includes('Uncategorized')) {
             allCats.push('Uncategorized');
         }
-
-        // Common category context menu trigger
-        const showCategoryMenu = (e, cat, count, isSystem) => {
-            e.preventDefault();
-            e.stopPropagation();
-            state.contextCategory = { cat, count, isSystem };
-
-            const menuWidth = 160;
-            const menuHeight = 85;
-            const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8);
-            const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8);
-            elements.categoryContextMenu.style.left = `${Math.max(8, x)}px`;
-            elements.categoryContextMenu.style.top = `${Math.max(8, y)}px`;
-            elements.categoryContextMenu.classList.remove('hidden');
-        };
 
         // Common category drop handler
         const handleCategoryDrop = async (e, targetBtn, cat) => {
@@ -686,10 +932,8 @@
             const li = document.createElement('li');
             li.innerHTML = `
                 <button class="nav-item ${state.currentFilter === cat ? 'active' : ''}" data-filter="${escapeHtml(cat)}" data-category="${escapeHtml(cat)}" title="Right-click for options (Edit / Delete)">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    <span>${escapeHtml(cat)}</span>
+                    ${getCategoryIconHtml(cat)}
+                    <span class="nav-label">${escapeHtml(cat)}</span>
                     <span class="nav-count">${count}</span>
                 </button>
             `;
@@ -741,10 +985,8 @@
                 tabBtn.setAttribute('data-category', cat);
                 tabBtn.setAttribute('title', `${cat} (${count} passwords) - Right-click for options`);
                 tabBtn.innerHTML = `
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                    </svg>
-                    <span>${escapeHtml(cat)}</span>
+                    ${getCategoryIconHtml(cat)}
+                    <span class="saas-tab-label">${escapeHtml(cat)}</span>
                     <span class="saas-tab-badge">${count}</span>
                 `;
 
@@ -841,10 +1083,11 @@
 
         // Add views nav listener in sidebar (All Passwords / Recently Used)
         document.querySelectorAll('.sidebar .nav-list:first-of-type .nav-item').forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.onclick = (e) => {
+                if (e) e.preventDefault();
                 const filter = btn.getAttribute('data-filter');
-                setFilter(filter);
-            });
+                if (filter) setFilter(filter);
+            };
         });
 
         // Add views nav listeners in SaaS Tab Bar
@@ -907,12 +1150,16 @@
         }
 
         if (filter === 'all') {
-            elements.currentViewTitle.textContent = 'All Passwords';
-            elements.currentViewDesc.textContent = 'Securely encrypted credentials stored on your local disk. Drag & drop onto categories to re-classify.';
+            elements.currentViewTitle.textContent = 'Dashboard';
+            elements.currentViewDesc.textContent = 'Vault overview, recent activity, and category folders.';
             elements.recentStripSection.classList.remove('hidden');
         } else if (filter === 'recent') {
             elements.currentViewTitle.textContent = 'Recently Used Passwords';
-            elements.currentViewDesc.textContent = 'Credentials you have recently copied or viewed.';
+            elements.currentViewDesc.textContent = 'Showing your last 20 used credentials.';
+            elements.recentStripSection.classList.add('hidden');
+        } else if (filter === 'migration') {
+            elements.currentViewTitle.textContent = 'Account Migration';
+            elements.currentViewDesc.textContent = 'Bulk type or import your usernames and passwords directly into your default folder.';
             elements.recentStripSection.classList.add('hidden');
         } else {
             elements.currentViewTitle.textContent = filter;
@@ -1015,6 +1262,99 @@
         });
     }
 
+    // Render Category Folder Cards (Dashboard View)
+    function renderCategoryFolders() {
+        if (!elements.categoryFoldersGrid) return;
+        elements.categoryFoldersGrid.innerHTML = '';
+
+        const categories = (state.categories || []).filter(c => c && c.trim());
+        
+        categories.forEach(catName => {
+            const items = (state.entries || []).filter(e => (e.category || 'Uncategorized') === catName);
+            const count = items.length;
+            const previewNames = items.slice(0, 3).map(e => escapeHtml(e.title || e.uname)).join(', ');
+            const previewText = count === 0 ? 'Empty folder' : (previewNames + (count > 3 ? ` +${count - 3} more` : ''));
+
+            const card = document.createElement('div');
+            card.className = 'category-folder-card';
+            card.setAttribute('data-category', catName);
+            card.innerHTML = `
+                <div class="folder-card-top">
+                    <div class="folder-card-icon-wrap">
+                        ${getCategoryIconHtml(catName, 'folder-card-cat-icon')}
+                    </div>
+                    <span class="folder-card-count">${count} ${count === 1 ? 'credential' : 'credentials'}</span>
+                </div>
+                <div class="folder-card-info">
+                    <h3 class="folder-card-title">${escapeHtml(catName)}</h3>
+                    <div class="folder-card-preview" title="${escapeHtml(previewText)}">${previewText}</div>
+                </div>
+                <div class="folder-card-footer">
+                    <span>Browse folder</span>
+                    <span class="folder-card-action">&rarr;</span>
+                </div>
+            `;
+
+            card.addEventListener('click', () => {
+                setFilter(catName);
+            });
+
+            // Right-click context menu on category card (Edit & Delete Empty)
+            card.addEventListener('contextmenu', (e) => {
+                const liveCount = (state.entries || []).filter(item => (item.category || 'Uncategorized').toLowerCase() === catName.toLowerCase()).length;
+                const isSystem = catName.toLowerCase() === 'uncategorized';
+                showCategoryMenu(e, catName, liveCount, isSystem);
+            });
+
+            // Drag and drop onto folder card
+            card.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                card.style.borderColor = 'rgba(255, 255, 255, 0.45)';
+            });
+            card.addEventListener('dragleave', () => {
+                card.style.borderColor = '';
+            });
+            card.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                card.style.borderColor = '';
+                const entryId = e.dataTransfer.getData('text/plain') || state.draggedEntryId;
+                if (!entryId) return;
+                const entry = state.entries.find(it => it.id === entryId);
+                if (!entry || entry.category === catName) return;
+                const res = await apiRequest('/api/entries/category', 'PUT', {
+                    id: entryId,
+                    category: catName
+                });
+                if (res.ok) {
+                    entry.category = catName;
+                    showToast(`Moved "${entry.title || entry.uname}" to "${catName}"!`);
+                    renderDashboard();
+                } else {
+                    showToast('Failed to change category', 'danger');
+                }
+            });
+
+            elements.categoryFoldersGrid.appendChild(card);
+        });
+
+        // "+ New Category" Action Card
+        const addCard = document.createElement('div');
+        addCard.className = 'category-folder-add-card';
+        addCard.innerHTML = `
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span style="font-weight: 600; font-size: 13px;">New Category</span>
+            <span style="font-size: 11px; opacity: 0.7;">Create a new folder</span>
+        `;
+        addCard.addEventListener('click', () => {
+            if (elements.newCatModal) openModal(elements.newCatModal);
+        });
+        elements.categoryFoldersGrid.appendChild(addCard);
+    }
+
     // Render Cards Grid (Default) and Table Rows with View Switching (Issue 2 & 3 & 4)
     function renderTable() {
         elements.entriesTableBody.innerHTML = '';
@@ -1022,13 +1362,85 @@
             elements.entriesCardsGrid.innerHTML = '';
         }
 
-        let filtered = state.entries;
+        // Migration View Handling
+        if (state.currentFilter === 'migration') {
+            if (elements.categoryFoldersGrid) elements.categoryFoldersGrid.classList.add('hidden');
+            if (elements.entriesCardsGrid) elements.entriesCardsGrid.classList.add('hidden');
+            if (elements.entriesTableContainer) elements.entriesTableContainer.classList.add('hidden');
+            if (elements.emptyState) elements.emptyState.classList.add('hidden');
+            if (elements.recentStripSection) elements.recentStripSection.classList.add('hidden');
+            if (elements.viewModeToggleGroup) elements.viewModeToggleGroup.style.display = 'none';
+            if (elements.openNewCategoryModalBtn) elements.openNewCategoryModalBtn.style.display = 'none';
+            if (elements.openNewEntryModalBtn) elements.openNewEntryModalBtn.style.display = 'none';
+            if (elements.openMigrationPageBtn) {
+                elements.openMigrationPageBtn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Dashboard</span>
+                `;
+                elements.openMigrationPageBtn.title = "Back to Dashboard";
+            }
+            if (elements.migrationView) {
+                elements.migrationView.classList.remove('hidden');
+                initOrRefreshMigrationView();
+            }
+            return;
+        } else {
+            if (elements.openNewCategoryModalBtn) elements.openNewCategoryModalBtn.style.display = '';
+            if (elements.openNewEntryModalBtn) elements.openNewEntryModalBtn.style.display = '';
+            if (elements.openMigrationPageBtn) {
+                elements.openMigrationPageBtn.innerHTML = `
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <span>Migration</span>
+                `;
+                elements.openMigrationPageBtn.title = "Account Migration (Bulk Import)";
+            }
+            if (elements.migrationView) elements.migrationView.classList.add('hidden');
+        }
+
+        // 1. Dashboard View (All Passwords / No search query): Show Category Folder Cards!
+        if (state.currentFilter === 'all' && !state.searchQuery) {
+            if (elements.categoryFoldersGrid) {
+                elements.categoryFoldersGrid.classList.remove('hidden');
+                renderCategoryFolders();
+            }
+            if (elements.entriesCardsGrid) elements.entriesCardsGrid.classList.add('hidden');
+            if (elements.entriesTableContainer) elements.entriesTableContainer.classList.add('hidden');
+            if (elements.emptyState) elements.emptyState.classList.add('hidden');
+            if (elements.viewModeToggleGroup) elements.viewModeToggleGroup.style.display = 'none';
+            return;
+        }
+
+        // Otherwise hide category folders grid
+        if (elements.categoryFoldersGrid) elements.categoryFoldersGrid.classList.add('hidden');
+        if (elements.viewModeToggleGroup) elements.viewModeToggleGroup.style.display = '';
+
+        let filtered = [];
 
         if (state.currentFilter === 'recent') {
-            const recentIds = state.recentActivity.map(a => a.entry_id);
-            filtered = state.entries.filter(e => recentIds.includes(e.id));
+            // Show up to the last 20 used passwords, ordered chronologically
+            const dedupedRecent = deduplicateRecentList(state.recentActivity || []).slice(0, 20);
+            const seenIds = new Set();
+            for (const evt of dedupedRecent) {
+                const match = state.entries.find(e => e.id === evt.entry_id) ||
+                              state.entries.find(e => (e.title || '').trim().toLowerCase() === (evt.title || '').trim().toLowerCase() && 
+                                                      (e.uname || '').trim().toLowerCase() === (evt.uname || '').trim().toLowerCase());
+                if (match && !seenIds.has(match.id)) {
+                    seenIds.add(match.id);
+                    filtered.push(match);
+                }
+            }
         } else if (state.currentFilter !== 'all') {
             filtered = state.entries.filter(e => (e.category || 'Uncategorized') === state.currentFilter);
+        } else {
+            // 'all' with active search query
+            filtered = state.entries;
         }
 
         if (state.searchQuery) {
@@ -1081,16 +1493,33 @@
                         </div>
                         <div class="card-title-group">
                             <span class="card-service-title" title="${escapeHtml(entry.title || entry.uname)}">${escapeHtml(entry.title || entry.uname)}</span>
-                            <span class="badge card-category-badge">${escapeHtml(catDisplay)}</span>
+                            <div class="card-badges-row">
+                                <span class="badge card-category-badge">${getCategoryIconHtml(catDisplay, 'cat-badge-icon')} ${escapeHtml(catDisplay)}</span>
+                                ${customFieldsCount > 0 ? `
+                                    <span class="card-cf-count-badge" title="${customFieldsCount} custom ${customFieldsCount === 1 ? 'field' : 'fields'}">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <circle cx="12" cy="12" r="3"></circle>
+                                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                        </svg>
+                                        <span>${customFieldsCount}</span>
+                                    </span>
+                                ` : ''}
+                            </div>
                         </div>
                         <div class="card-header-actions">
-                            <button type="button" class="btn btn-icon btn-xs card-btn-share" title="Secure Share (10m temporary link)">
+                            <button type="button" class="btn btn-icon btn-xs card-btn-share" title="Secure Share (10m temporary link)" aria-label="Share">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <circle cx="18" cy="5" r="3"></circle>
                                     <circle cx="6" cy="12" r="3"></circle>
                                     <circle cx="18" cy="19" r="3"></circle>
                                     <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
                                     <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-icon btn-xs card-btn-edit" title="Edit Entry" aria-label="Edit">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                                 </svg>
                             </button>
                         </div>
@@ -1101,8 +1530,11 @@
                             <span class="card-field-label">User</span>
                             <div class="card-field-val-wrap">
                                 <span class="mono-text card-uname-text">${escapeHtml(entry.uname || '—')}</span>
-                                <button type="button" class="btn btn-secondary btn-xs card-copy-uname-btn" title="Copy Username">
-                                    Copy
+                                <button type="button" class="btn btn-icon btn-xs card-copy-uname-btn" title="Copy Username" aria-label="Copy Username">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -1111,29 +1543,52 @@
                             <span class="card-field-label">Pass</span>
                             <div class="card-field-val-wrap">
                                 <span class="mono-text card-pw-text masked-pw">••••••••••••</span>
-                                <button type="button" class="btn btn-secondary btn-xs card-toggle-pw-btn" title="Show/Hide">
-                                    Show
+                                <button type="button" class="btn btn-icon btn-xs card-toggle-pw-btn" title="Show / Hide Password" aria-label="Show / Hide Password">
+                                    <svg class="eye-show" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                        <circle cx="12" cy="12" r="3"></circle>
+                                    </svg>
+                                    <svg class="eye-hide hidden" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                                    </svg>
                                 </button>
-                                <button type="button" class="btn btn-secondary btn-xs card-copy-pw-btn" title="Copy Password">
-                                    Copy
+                                <button type="button" class="btn btn-icon btn-xs card-copy-pw-btn" title="Copy Password" aria-label="Copy Password">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
-
-                        ${customFieldsCount > 0 ? `
-                            <div class="card-cf-badges">
-                                <span class="custom-fields-pill">⚙️ ${customFieldsCount} custom ${customFieldsCount === 1 ? 'field' : 'fields'}</span>
-                            </div>
-                        ` : ''}
                     </div>
 
                     <div class="card-footer">
-                        <span class="card-drag-handle" title="Drag to a category in sidebar or tabs to reclassify">⋮⋮</span>
+                        <span class="card-drag-handle" title="Drag to a category in sidebar or tabs to reclassify" aria-label="Drag entry">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor">
+                                <circle cx="9" cy="6" r="1.5"></circle>
+                                <circle cx="15" cy="6" r="1.5"></circle>
+                                <circle cx="9" cy="12" r="1.5"></circle>
+                                <circle cx="15" cy="12" r="1.5"></circle>
+                                <circle cx="9" cy="18" r="1.5"></circle>
+                                <circle cx="15" cy="18" r="1.5"></circle>
+                            </svg>
+                        </span>
                         <div class="card-actions-right">
-                            <button type="button" class="btn btn-secondary btn-xs card-share-btn" title="Secure Share (10m temporary link)">Share</button>
-                            <button type="button" class="btn btn-secondary btn-xs card-view-btn">View</button>
-                            <button type="button" class="btn btn-secondary btn-xs card-edit-btn">Edit</button>
-                            <button type="button" class="btn btn-danger btn-xs card-delete-btn">Delete</button>
+                            <button type="button" class="btn btn-icon btn-xs card-view-btn" title="View Details" aria-label="View Details">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </button>
+                            <button type="button" class="btn btn-icon btn-xs btn-danger card-delete-btn" title="Delete Entry" aria-label="Delete Entry">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="3 6 5 6 21 6"></polyline>
+                                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                    <line x1="10" y1="11" x2="10" y2="17"></line>
+                                    <line x1="14" y1="11" x2="14" y2="17"></line>
+                                </svg>
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1160,14 +1615,18 @@
                 cardToggleBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     const isMasked = cardPwText.classList.contains('masked-pw');
+                    const eyeShow = cardToggleBtn.querySelector('.eye-show');
+                    const eyeHide = cardToggleBtn.querySelector('.eye-hide');
                     if (isMasked) {
                         cardPwText.textContent = entry.password;
                         cardPwText.classList.remove('masked-pw');
-                        cardToggleBtn.textContent = 'Hide';
+                        if (eyeShow) eyeShow.classList.add('hidden');
+                        if (eyeHide) eyeHide.classList.remove('hidden');
                     } else {
                         cardPwText.textContent = '••••••••••••';
                         cardPwText.classList.add('masked-pw');
-                        cardToggleBtn.textContent = 'Show';
+                        if (eyeShow) eyeShow.classList.remove('hidden');
+                        if (eyeHide) eyeHide.classList.add('hidden');
                     }
                 });
 
@@ -1183,27 +1642,37 @@
                     logRecentUse(entry.id, entry.title, entry.category, entry.uname, 'copied_password');
                 });
 
-                const triggerShare = (e) => {
-                    e.stopPropagation();
-                    openShareModal(entry);
-                };
-                card.querySelector('.card-btn-share').addEventListener('click', triggerShare);
-                card.querySelector('.card-share-btn').addEventListener('click', triggerShare);
+                const shareBtn = card.querySelector('.card-btn-share');
+                if (shareBtn) {
+                    shareBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openShareModal(entry);
+                    });
+                }
 
-                card.querySelector('.card-view-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openViewModal(entry);
-                });
+                const editBtn = card.querySelector('.card-btn-edit');
+                if (editBtn) {
+                    editBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openEditModal(entry);
+                    });
+                }
 
-                card.querySelector('.card-edit-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    openEditModal(entry);
-                });
+                const viewBtn = card.querySelector('.card-view-btn');
+                if (viewBtn) {
+                    viewBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openViewModal(entry);
+                    });
+                }
 
-                card.querySelector('.card-delete-btn').addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    handleDeleteEntry(entry);
-                });
+                const delBtn = card.querySelector('.card-delete-btn');
+                if (delBtn) {
+                    delBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        handleDeleteEntry(entry);
+                    });
+                }
 
                 card.addEventListener('click', () => openViewModal(entry));
 
@@ -1221,41 +1690,88 @@
                     <span class="drag-handle" title="Drag to a category in sidebar or tabs to reclassify">⋮⋮</span>
                 </td>
                 <td>
-                    <div class="account-cell" style="display: flex; align-items: center; gap: 9px;">
+                    <div class="account-cell">
                         ${avatarHtml}
                         <span class="account-title">${escapeHtml(entry.title || entry.uname)}</span>
                     </div>
                 </td>
                 <td>
-                    <span class="badge">${escapeHtml(catDisplay)}</span>
+                    <span class="badge">${getCategoryIconHtml(catDisplay, 'cat-badge-icon')} ${escapeHtml(catDisplay)}</span>
                 </td>
                 <td>
                     <div class="inline-copy-box">
-                        <span class="mono-text">${escapeHtml(entry.uname)}</span>
-                        <button class="btn btn-secondary btn-xs copy-table-uname-btn" title="Copy Username">
-                            Copy
+                        <span class="mono-text">${escapeHtml(entry.uname || '—')}</span>
+                        <button type="button" class="btn btn-icon btn-xs copy-table-uname-btn" title="Copy Username" aria-label="Copy Username">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
                         </button>
                     </div>
                 </td>
                 <td>
                     <div class="inline-copy-box">
-                        <span class="mono-text masked-pw">••••••••</span>
-                        <button class="btn btn-secondary btn-xs copy-table-pw-btn" title="Copy Password">
-                            Copy
+                        <span class="mono-text table-pw-text masked-pw">••••••••••••</span>
+                        <button type="button" class="btn btn-icon btn-xs toggle-table-pw-btn" title="Show / Hide Password" aria-label="Show / Hide Password">
+                            <svg class="eye-show" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                            <svg class="eye-hide hidden" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                                <line x1="1" y1="1" x2="23" y2="23"></line>
+                            </svg>
+                        </button>
+                        <button type="button" class="btn btn-icon btn-xs copy-table-pw-btn" title="Copy Password" aria-label="Copy Password">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                            </svg>
                         </button>
                     </div>
                 </td>
                 <td>
                     ${customFieldsCount > 0 
-                        ? `<span class="custom-fields-pill">⚙️ ${customFieldsCount} fields</span>` 
+                        ? `<span class="card-cf-count-badge" title="${customFieldsCount} custom ${customFieldsCount === 1 ? 'field' : 'fields'}">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="3"></circle>
+                                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                            </svg>
+                            <span>${customFieldsCount}</span>
+                        </span>` 
                         : `<span class="text-muted text-xs">—</span>`
                     }
                 </td>
                 <td class="actions-cell">
-                    <button class="btn btn-secondary btn-xs share-table-entry-btn" title="Secure Share (10m temporary link)">Share</button>
-                    <button class="btn btn-secondary btn-xs view-entry-btn">View</button>
-                    <button class="btn btn-secondary btn-xs edit-entry-btn">Edit</button>
-                    <button class="btn btn-danger btn-xs delete-entry-btn">Delete</button>
+                    <button type="button" class="btn btn-icon btn-xs share-table-entry-btn" title="Secure Share" aria-label="Share">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-xs view-entry-btn" title="View Details" aria-label="View Details">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-xs edit-entry-btn" title="Edit Entry" aria-label="Edit Entry">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                    <button type="button" class="btn btn-icon btn-xs btn-danger delete-entry-btn" title="Delete Entry" aria-label="Delete Entry">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"></polyline>
+                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                    </button>
                 </td>
             `;
 
@@ -1281,6 +1797,28 @@
                 copyToClipboard(entry.uname, `Username copied for ${entry.title}`);
                 logRecentUse(entry.id, entry.title, entry.category, entry.uname, 'copied_username');
             });
+
+            const tablePwText = tr.querySelector('.table-pw-text');
+            const toggleTablePwBtn = tr.querySelector('.toggle-table-pw-btn');
+            if (toggleTablePwBtn && tablePwText) {
+                toggleTablePwBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const isMasked = tablePwText.classList.contains('masked-pw');
+                    const eyeShow = toggleTablePwBtn.querySelector('.eye-show');
+                    const eyeHide = toggleTablePwBtn.querySelector('.eye-hide');
+                    if (isMasked) {
+                        tablePwText.textContent = entry.password;
+                        tablePwText.classList.remove('masked-pw');
+                        if (eyeShow) eyeShow.classList.add('hidden');
+                        if (eyeHide) eyeHide.classList.remove('hidden');
+                    } else {
+                        tablePwText.textContent = '••••••••••••';
+                        tablePwText.classList.add('masked-pw');
+                        if (eyeShow) eyeShow.classList.remove('hidden');
+                        if (eyeHide) eyeHide.classList.add('hidden');
+                    }
+                });
+            }
 
             tr.querySelector('.copy-table-pw-btn').addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -1439,8 +1977,123 @@
     });
 
     // ==================== NEW & EDIT CATEGORY MODALS (Ctrl + Shift + F) ====================
+    function updateIconPickerPreview(previewEl, icon) {
+        if (!previewEl) return;
+        if (!icon || icon === '📁') {
+            previewEl.innerHTML = `
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>`;
+        } else {
+            previewEl.innerHTML = `<span class="cat-icon-emoji" style="font-size: 20px;">${escapeHtml(icon)}</span>`;
+        }
+    }
+
+    function setupCategoryIconPickers() {
+        // New Category Modal Icon Picker
+        if (elements.newCatIconInput && elements.newCatIconPresets) {
+            elements.newCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const icon = chip.getAttribute('data-icon') || '📁';
+                    elements.newCatIconInput.value = icon === '📁' ? '' : icon;
+                    updateIconPickerPreview(elements.newCatIconPreview, icon);
+                    elements.newCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                });
+            });
+
+            elements.newCatIconInput.addEventListener('input', (e) => {
+                const val = e.target.value.trim();
+                updateIconPickerPreview(elements.newCatIconPreview, val || '📁');
+            });
+
+            if (elements.newCatClearIconBtn) {
+                elements.newCatClearIconBtn.addEventListener('click', () => {
+                    elements.newCatIconInput.value = '';
+                    updateIconPickerPreview(elements.newCatIconPreview, '📁');
+                    elements.newCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => c.classList.remove('active'));
+                });
+            }
+
+            const openNewCatEmojiPicker = () => {
+                if (window.VaultKeyEmojiLibrary) {
+                    window.VaultKeyEmojiLibrary.open({
+                        title: 'Choose Category Icon',
+                        onSelect: (emoji) => {
+                            elements.newCatIconInput.value = emoji;
+                            updateIconPickerPreview(elements.newCatIconPreview, emoji);
+                            elements.newCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => {
+                                c.classList.toggle('active', c.getAttribute('data-icon') === emoji);
+                            });
+                        }
+                    });
+                }
+            };
+            if (elements.newCatEmojiPickerBtn) {
+                elements.newCatEmojiPickerBtn.addEventListener('click', openNewCatEmojiPicker);
+            }
+            if (elements.newCatIconPreview) {
+                elements.newCatIconPreview.style.cursor = 'pointer';
+                elements.newCatIconPreview.addEventListener('click', openNewCatEmojiPicker);
+            }
+        }
+
+        // Edit Category Modal Icon Picker
+        if (elements.editCatIconInput && elements.editCatIconPresets) {
+            elements.editCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(chip => {
+                chip.addEventListener('click', () => {
+                    const icon = chip.getAttribute('data-icon') || '📁';
+                    elements.editCatIconInput.value = icon === '📁' ? '' : icon;
+                    updateIconPickerPreview(elements.editCatIconPreview, icon);
+                    elements.editCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => c.classList.remove('active'));
+                    chip.classList.add('active');
+                });
+            });
+
+            elements.editCatIconInput.addEventListener('input', (e) => {
+                const val = e.target.value.trim();
+                updateIconPickerPreview(elements.editCatIconPreview, val || '📁');
+            });
+
+            if (elements.editCatClearIconBtn) {
+                elements.editCatClearIconBtn.addEventListener('click', () => {
+                    elements.editCatIconInput.value = '';
+                    updateIconPickerPreview(elements.editCatIconPreview, '📁');
+                    elements.editCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => c.classList.remove('active'));
+                });
+            }
+
+            const openEditCatEmojiPicker = () => {
+                if (window.VaultKeyEmojiLibrary) {
+                    window.VaultKeyEmojiLibrary.open({
+                        title: 'Choose Category Icon',
+                        onSelect: (emoji) => {
+                            elements.editCatIconInput.value = emoji;
+                            updateIconPickerPreview(elements.editCatIconPreview, emoji);
+                            elements.editCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => {
+                                c.classList.toggle('active', c.getAttribute('data-icon') === emoji);
+                            });
+                        }
+                    });
+                }
+            };
+            if (elements.editCatEmojiPickerBtn) {
+                elements.editCatEmojiPickerBtn.addEventListener('click', openEditCatEmojiPicker);
+            }
+            if (elements.editCatIconPreview) {
+                elements.editCatIconPreview.style.cursor = 'pointer';
+                elements.editCatIconPreview.addEventListener('click', openEditCatEmojiPicker);
+            }
+        }
+    }
+
     function openNewCategoryModal() {
         elements.newCatNameInput.value = '';
+        if (elements.newCatIconInput) elements.newCatIconInput.value = '';
+        updateIconPickerPreview(elements.newCatIconPreview, '📁');
+        if (elements.newCatIconPresets) {
+            elements.newCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => c.classList.remove('active'));
+        }
         openModal(elements.newCatModal);
         elements.newCatNameInput.focus();
     }
@@ -1456,13 +2109,20 @@
         e.preventDefault();
         const catName = elements.newCatNameInput.value.trim();
         if (!catName) return;
+        const catIcon = elements.newCatIconInput ? elements.newCatIconInput.value.trim() : '';
 
         const res = await apiRequest('/api/categories', 'POST', { category: catName });
         if (res.ok) {
             closeModal(elements.newCatModal);
+            if (catIcon && catIcon !== '📁') {
+                state.preferences.category_icons = state.preferences.category_icons || {};
+                state.preferences.category_icons[catName] = catIcon;
+                await savePreferences({ category_icons: state.preferences.category_icons });
+            }
             showToast(`Category "${catName}" created!`);
             state.categories = res.data.categories || [];
             renderCategories();
+            renderDashboard();
             setFilter(catName);
         } else {
             showToast(res.data.error || 'Failed to create category', 'danger');
@@ -1473,6 +2133,16 @@
     function openEditCategoryModal(cat) {
         elements.editCatOldNameInput.value = cat;
         elements.editCatNewNameInput.value = cat;
+        const currentIcon = getCategoryIcon(cat);
+        if (elements.editCatIconInput) {
+            elements.editCatIconInput.value = currentIcon === '📁' ? '' : currentIcon;
+        }
+        updateIconPickerPreview(elements.editCatIconPreview, currentIcon);
+        if (elements.editCatIconPresets) {
+            elements.editCatIconPresets.querySelectorAll('.cat-icon-chip').forEach(c => {
+                c.classList.toggle('active', c.getAttribute('data-icon') === currentIcon);
+            });
+        }
         openModal(elements.editCatModal);
         elements.editCatNewNameInput.focus();
         elements.editCatNewNameInput.select();
@@ -1483,34 +2153,55 @@
         const oldName = elements.editCatOldNameInput.value.trim();
         const newName = elements.editCatNewNameInput.value.trim();
         if (!newName) return;
-        if (oldName === newName) {
+        const newIcon = elements.editCatIconInput ? elements.editCatIconInput.value.trim() : '';
+        const prevIcon = getCategoryIcon(oldName);
+
+        const nameChanged = oldName !== newName;
+        const iconChanged = (newIcon || '📁') !== prevIcon;
+
+        if (!nameChanged && !iconChanged) {
             closeModal(elements.editCatModal);
             return;
         }
 
-        const res = await apiRequest('/api/categories', 'PUT', {
-            old_name: oldName,
-            new_name: newName
-        });
-
-        if (res.ok) {
-            closeModal(elements.editCatModal);
-            showToast(`Renamed category to "${newName}"!`);
-            state.categories = res.data.categories || [];
-            state.entries.forEach(item => {
-                if ((item.category || '').toLowerCase() === oldName.toLowerCase()) {
-                    item.category = newName;
-                }
+        if (nameChanged) {
+            const res = await apiRequest('/api/categories', 'PUT', {
+                old_name: oldName,
+                new_name: newName
             });
-            if (state.currentFilter.toLowerCase() === oldName.toLowerCase()) {
-                state.currentFilter = newName;
+            if (res.ok) {
+                state.categories = res.data.categories || [];
+                state.entries.forEach(item => {
+                    if ((item.category || '').toLowerCase() === oldName.toLowerCase()) {
+                        item.category = newName;
+                    }
+                });
+                if (state.currentFilter.toLowerCase() === oldName.toLowerCase()) {
+                    state.currentFilter = newName;
+                }
+            } else {
+                showToast(res.data.error || 'Failed to rename category', 'danger');
+                return;
             }
-            renderCategories();
-            renderDashboard();
-            setFilter(state.currentFilter);
-        } else {
-            showToast(res.data.error || 'Failed to rename category', 'danger');
         }
+
+        // Update category icon preference
+        state.preferences.category_icons = state.preferences.category_icons || {};
+        if (nameChanged && state.preferences.category_icons[oldName]) {
+            delete state.preferences.category_icons[oldName];
+        }
+        if (newIcon && newIcon !== '📁') {
+            state.preferences.category_icons[newName] = newIcon;
+        } else {
+            delete state.preferences.category_icons[newName];
+        }
+        await savePreferences({ category_icons: state.preferences.category_icons });
+
+        closeModal(elements.editCatModal);
+        showToast(`Category "${newName}" updated!`);
+        renderCategories();
+        renderDashboard();
+        setFilter(state.currentFilter);
     });
 
     // Right-Click Context Menu Actions (Edit & Delete Category)
@@ -1524,10 +2215,22 @@
     }
 
     if (elements.contextDeleteCategoryBtn) {
-        elements.contextDeleteCategoryBtn.addEventListener('click', () => {
+        elements.contextDeleteCategoryBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             elements.categoryContextMenu.classList.add('hidden');
             if (state.contextCategory) {
-                handleDeleteCategory(state.contextCategory.cat, state.contextCategory.count);
+                const { cat, isSystem } = state.contextCategory;
+                if (isSystem) {
+                    showToast('The default "Uncategorized" category cannot be deleted.', 'danger');
+                    return;
+                }
+                const liveCount = (state.entries || []).filter(item => (item.category || 'Uncategorized').toLowerCase() === cat.toLowerCase()).length;
+                if (liveCount > 0) {
+                    showToast(`Cannot delete "${cat}": only empty categories can be deleted. It contains ${liveCount} credential(s).`, 'danger');
+                    return;
+                }
+                handleDeleteCategory(cat, 0);
             }
         });
     }
@@ -1540,10 +2243,10 @@
             return;
         }
 
-        // Live count check
+        // Live count check - only empty categories can be deleted
         const liveCount = state.entries.filter(e => (e.category || 'Uncategorized').toLowerCase() === cat.toLowerCase()).length;
         if (liveCount > 0) {
-            showToast(`Cannot delete "${cat}": it contains ${liveCount} password profile(s). Move or delete passwords first.`, 'danger');
+            showToast(`Cannot delete "${cat}": only empty categories can be deleted. It contains ${liveCount} credential(s).`, 'danger');
             return;
         }
 
@@ -1551,6 +2254,10 @@
             const res = await apiRequest(`/api/categories?name=${encodeURIComponent(cat)}`, 'DELETE');
             if (res.ok) {
                 showToast(`Category "${cat}" deleted.`);
+                if (state.preferences.category_icons && state.preferences.category_icons[cat]) {
+                    delete state.preferences.category_icons[cat];
+                    await savePreferences({ category_icons: state.preferences.category_icons });
+                }
                 state.categories = res.data.categories || state.categories.filter(c => c.toLowerCase() !== cat.toLowerCase());
                 if (state.currentFilter.toLowerCase() === cat.toLowerCase()) {
                     state.currentFilter = 'all';
@@ -1711,6 +2418,41 @@
                     updateAvatarPickerPreview(elements.formTitle.value, '');
                 }
             });
+        }
+
+        // Open full emoji library picker
+        const openEntryAvatarEmojiPicker = () => {
+            if (window.VaultKeyEmojiLibrary) {
+                window.VaultKeyEmojiLibrary.open({
+                    title: 'Choose Password Avatar Icon',
+                    onSelect: (emoji) => {
+                        const avatarVal = `emoji:${emoji}`;
+                        if (elements.formAvatar) elements.formAvatar.value = avatarVal;
+                        if (elements.avatarCustomInput) elements.avatarCustomInput.value = emoji;
+                        updateAvatarPickerPreview(elements.formTitle.value, avatarVal);
+
+                        if (elements.avatarPresetChips) {
+                            let matched = false;
+                            elements.avatarPresetChips.querySelectorAll('.avatar-chip').forEach(c => {
+                                const isMatch = c.getAttribute('data-avatar') === avatarVal;
+                                c.classList.toggle('active', isMatch);
+                                if (isMatch) matched = true;
+                            });
+                            if (!matched) {
+                                elements.avatarPresetChips.querySelectorAll('.avatar-chip').forEach(c => c.classList.remove('active'));
+                            }
+                        }
+                    }
+                });
+            }
+        };
+
+        if (elements.entryEmojiPickerBtn) {
+            elements.entryEmojiPickerBtn.addEventListener('click', openEntryAvatarEmojiPicker);
+        }
+        if (elements.avatarCurrentPreview) {
+            elements.avatarCurrentPreview.style.cursor = 'pointer';
+            elements.avatarCurrentPreview.addEventListener('click', openEntryAvatarEmojiPicker);
         }
 
         // Live preview when typing service name if avatar is Auto
@@ -2697,8 +3439,13 @@
                 copyToClipboard(item.shareUrl, 'Share link copied to clipboard!');
             });
 
-            card.querySelector('.revoke-btn').addEventListener('click', () => {
-                if (confirm(`Permanently revoke the share for "${item.title}"? The recipient will immediately lose access.`)) {
+            card.querySelector('.revoke-btn').addEventListener('click', async () => {
+                const confirmed = await confirmAction(`Permanently revoke the share for "${item.title}"? The recipient will immediately lose access.`, {
+                    title: 'Revoke Share Link',
+                    confirmText: 'Revoke Access',
+                    isDanger: true
+                });
+                if (confirmed) {
                     executeRevocation(item.shareId, item.revocationToken, () => {
                         card.remove();
                         if (elements.activeSharesList.children.length === 0) {
@@ -2769,9 +3516,14 @@
 
         // Revoke Current Share button (Stage 2)
         if (elements.revokeCurrentShareBtn) {
-            elements.revokeCurrentShareBtn.addEventListener('click', () => {
+            elements.revokeCurrentShareBtn.addEventListener('click', async () => {
                 if (!currentActiveShareId || !currentShareRevocationToken) return;
-                if (confirm('Permanently revoke and destroy this share link immediately?')) {
+                const confirmed = await confirmAction('Permanently revoke and destroy this share link immediately?', {
+                    title: 'Revoke Share Link',
+                    confirmText: 'Revoke & Destroy',
+                    isDanger: true
+                });
+                if (confirmed) {
                     elements.revokeCurrentShareBtn.disabled = true;
                     elements.revokeCurrentShareBtn.textContent = 'Revoking...';
                     executeRevocation(currentActiveShareId, currentShareRevocationToken, () => {
@@ -2829,6 +3581,15 @@
                 try {
                     localStorage.setItem('vault_preferences', JSON.stringify(state.preferences));
                 } catch (e) {}
+
+                // Re-render categories, folder cards, and table badges so updated icons display immediately
+                if (state.categories && state.categories.length > 0) {
+                    renderCategories();
+                    renderCategoryFolders();
+                    if (state.entries && state.entries.length > 0) {
+                        renderTable();
+                    }
+                }
             }
         } catch (err) {
             console.warn('Failed syncing preferences with backend', err);
@@ -2876,6 +3637,11 @@
             state.preferences.sharing = {
                 ...DEFAULT_PREFERENCES.sharing,
                 ...data.sharing
+            };
+        }
+        if (data.category_icons && typeof data.category_icons === 'object') {
+            state.preferences.category_icons = {
+                ...data.category_icons
             };
         }
     }
@@ -3215,10 +3981,10 @@
         if (pwBadge && s.new_password) pwBadge.textContent = s.new_password;
 
         if (elements.openNewEntryModalBtn && s.new_password) {
-            elements.openNewEntryModalBtn.title = `Add New Password (${s.new_password})`;
+            elements.openNewEntryModalBtn.title = `Add New (${s.new_password})`;
         }
         if (elements.openNewCategoryModalBtn && s.new_category) {
-            elements.openNewCategoryModalBtn.title = `Create Category (${s.new_category})`;
+            elements.openNewCategoryModalBtn.title = `Add Category (${s.new_category})`;
         }
     }
 
@@ -3482,8 +4248,8 @@
         commands.push({
             id: 'nav_all',
             category: 'Navigation',
-            title: 'All Passwords',
-            desc: 'View all saved vault credentials',
+            title: 'Dashboard',
+            desc: 'View vault overview and category folders',
             shortcut: '',
             run: () => { setFilter('all'); }
         });
@@ -3494,6 +4260,14 @@
             desc: 'View recently accessed credentials and quick actions',
             shortcut: '',
             run: () => { setFilter('recent'); }
+        });
+        commands.push({
+            id: 'nav_migration',
+            category: 'Navigation',
+            title: 'Account Migration',
+            desc: 'Bulk type or import usernames and passwords to default folder',
+            shortcut: '',
+            run: () => { setFilter('migration'); }
         });
 
         // Dynamic categories
@@ -3818,6 +4592,20 @@
 
     // ==================== NAVIGATION BUTTON BINDINGS ====================
     function setupNavigationButtons() {
+        const sidebarAllBtn = document.querySelector('.sidebar .nav-item[data-filter="all"]');
+        if (sidebarAllBtn) {
+            sidebarAllBtn.onclick = (e) => {
+                if (e) e.preventDefault();
+                setFilter('all');
+            };
+        }
+        const sidebarRecentBtn = document.querySelector('.sidebar .nav-item[data-filter="recent"]');
+        if (sidebarRecentBtn) {
+            sidebarRecentBtn.onclick = (e) => {
+                if (e) e.preventDefault();
+                setFilter('recent');
+            };
+        }
         if (elements.openSettingsBtn) {
             elements.openSettingsBtn.addEventListener('click', () => openSettingsModal());
         }
@@ -4173,7 +4961,7 @@
     });
 
     document.addEventListener('contextmenu', (e) => {
-        if (elements.categoryContextMenu && !e.target.closest('.nav-item[data-category]')) {
+        if (elements.categoryContextMenu && !e.target.closest('.nav-item[data-category]') && !e.target.closest('.category-folder-card') && !e.target.closest('.saas-tab[data-category]')) {
             elements.categoryContextMenu.classList.add('hidden');
         }
     });
@@ -4200,9 +4988,752 @@
         return `${Math.floor(diff / 86400)}d ago`;
     }
 
+    // ==================== ACCOUNT MIGRATION & BULK IMPORT CONTROLLER ====================
+    function setupMigrationPage() {
+        if (!elements.migrationView) return;
+
+        // Navigation triggers
+        if (elements.sidebarMigrationNavBtn) {
+            elements.sidebarMigrationNavBtn.onclick = (e) => {
+                if (e) e.preventDefault();
+                setFilter('migration');
+            };
+        }
+        if (elements.saasTabMigration) {
+            elements.saasTabMigration.onclick = (e) => {
+                if (e) e.preventDefault();
+                setFilter('migration');
+            };
+        }
+        if (elements.openMigrationPageBtn) {
+            elements.openMigrationPageBtn.onclick = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                if (state.currentFilter === 'migration') {
+                    setFilter('all');
+                } else {
+                    setFilter('migration');
+                }
+            };
+        }
+        if (elements.migBackToVaultBtn) {
+            elements.migBackToVaultBtn.onclick = (e) => {
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                setFilter('all');
+            };
+        }
+
+        // Mode Tabs switching
+        const tabs = [
+            { btn: elements.migTabBtnTable, panel: elements.migrationTableMode, id: 'table' },
+            { btn: elements.migTabBtnBulk, panel: elements.migrationBulkMode, id: 'bulk' },
+            { btn: elements.migTabBtnFile, panel: elements.migrationFileMode, id: 'file' }
+        ];
+
+        tabs.forEach(t => {
+            if (!t.btn) return;
+            t.btn.addEventListener('click', () => {
+                tabs.forEach(o => {
+                    if (o.btn) o.btn.classList.toggle('active', o.id === t.id);
+                    if (o.panel) o.panel.classList.toggle('hidden', o.id !== t.id);
+                });
+            });
+        });
+
+        // Target Folder selection change
+        if (elements.migrationCategorySelect) {
+            elements.migrationCategorySelect.addEventListener('change', () => {
+                updateMigrationStats();
+            });
+        }
+
+        // Table Action Buttons
+        if (elements.migAddRowBtn) {
+            elements.migAddRowBtn.addEventListener('click', () => {
+                const tr = addMigrationRow();
+                updateMigrationStats();
+                const unameInput = tr?.querySelector('.mig-uname-input');
+                if (unameInput) setTimeout(() => unameInput.focus(), 20);
+            });
+        }
+
+        if (elements.migAdd5RowsBtn) {
+            elements.migAdd5RowsBtn.addEventListener('click', () => {
+                for (let i = 0; i < 5; i++) addMigrationRow();
+                updateMigrationStats();
+            });
+        }
+
+        if (elements.migFillMissingPwBtn) {
+            elements.migFillMissingPwBtn.addEventListener('click', () => {
+                let filled = 0;
+                if (!elements.migrationTableBody) return;
+                elements.migrationTableBody.querySelectorAll('tr').forEach(tr => {
+                    const unameInput = tr.querySelector('.mig-uname-input');
+                    const pwInput = tr.querySelector('.mig-pw-input');
+                    if (unameInput && pwInput && unameInput.value.trim() && !pwInput.value) {
+                        pwInput.value = generateSecurePassword(16, true, true, true, true);
+                        pwInput.type = 'text';
+                        const toggleBtn = tr.querySelector('.mig-toggle-pw-btn');
+                        if (toggleBtn) toggleBtn.style.color = 'var(--primary-bg)';
+                        filled++;
+                    }
+                });
+                updateMigrationStats();
+                if (filled > 0) {
+                    showToast(`Generated secure random passwords for ${filled} account${filled > 1 ? 's' : ''}!`);
+                } else {
+                    showToast('All accounts with usernames already have passwords filled.', 'info');
+                }
+            });
+        }
+
+        if (elements.migCleanEmptyBtn) {
+            elements.migCleanEmptyBtn.addEventListener('click', () => {
+                if (!elements.migrationTableBody) return;
+                const rows = Array.from(elements.migrationTableBody.querySelectorAll('tr'));
+                let removed = 0;
+                rows.forEach(tr => {
+                    const uname = (tr.querySelector('.mig-uname-input')?.value || '').trim();
+                    const pw = tr.querySelector('.mig-pw-input')?.value || '';
+                    const title = (tr.querySelector('.mig-title-input')?.value || '').trim();
+                    const notes = (tr.querySelector('.mig-notes-input')?.value || '').trim();
+                    if (!uname && !pw && !title && !notes) {
+                        tr.remove();
+                        removed++;
+                    }
+                });
+                if (elements.migrationTableBody.children.length === 0) {
+                    addMigrationRow();
+                }
+                renumberMigrationRows();
+                updateMigrationStats();
+                showToast(`Cleaned ${removed} empty row${removed === 1 ? '' : 's'}.`);
+            });
+        }
+
+        if (elements.migClearAllBtn) {
+            elements.migClearAllBtn.addEventListener('click', async () => {
+                const confirmed = await confirmAction('Clear all entered accounts in the migration table?', {
+                    title: 'Clear Migration Table',
+                    confirmText: 'Clear All Rows',
+                    isDanger: true
+                });
+                if (confirmed) {
+                    if (elements.migrationTableBody) elements.migrationTableBody.innerHTML = '';
+                    for (let i = 0; i < 4; i++) addMigrationRow();
+                    updateMigrationStats();
+                    showToast('Cleared all rows.');
+                }
+            });
+        }
+
+        // Bulk Text actions
+        if (elements.migSampleDataBtn) {
+            elements.migSampleDataBtn.addEventListener('click', () => {
+                if (elements.migBulkTextarea) {
+                    elements.migBulkTextarea.value = 
+`google_account@gmail.com, Tr0ngP@ssw0rd!
+GitHub, dev_smith, G!thubT0k3n_88
+admin@company.io: SecureToken#92, Work Admin
+Netflix, family_user@home.com, CinemaPass2026!, Home streaming
+Spotify, music.fan99@web.de, AudioVibe$33`;
+                }
+            });
+        }
+
+        if (elements.migParseBulkBtn) {
+            elements.migParseBulkBtn.addEventListener('click', () => {
+                parseBulkTextToTable();
+            });
+        }
+
+        // CSV File Import actions
+        setupMigrationFileDropzone();
+
+        // Save All Button
+        if (elements.migSaveAllSubmitBtn) {
+            elements.migSaveAllSubmitBtn.addEventListener('click', () => {
+                executeSaveAllMigration();
+            });
+        }
+
+        // Success Box Actions
+        if (elements.migViewImportedBtn) {
+            elements.migViewImportedBtn.addEventListener('click', () => {
+                const targetCat = elements.migrationCategorySelect?.value || 'Uncategorized';
+                setFilter(targetCat === 'Uncategorized' ? 'all' : targetCat);
+            });
+        }
+
+        if (elements.migImportMoreBtn) {
+            elements.migImportMoreBtn.addEventListener('click', () => {
+                if (elements.migSuccessBox) elements.migSuccessBox.classList.add('hidden');
+                if (elements.migrationTableBody) elements.migrationTableBody.innerHTML = '';
+                for (let i = 0; i < 4; i++) addMigrationRow();
+                updateMigrationStats();
+                if (elements.migTabBtnTable) elements.migTabBtnTable.click();
+            });
+        }
+    }
+
+    function initOrRefreshMigrationView() {
+        if (!elements.migrationView) return;
+
+        // Populate destination category dropdown: Uncategorized is always first and default!
+        if (elements.migrationCategorySelect) {
+            const currentSelected = elements.migrationCategorySelect.value;
+            elements.migrationCategorySelect.innerHTML = '';
+
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = 'Uncategorized';
+            defaultOpt.textContent = '📁 Default Folder (Uncategorized)';
+            elements.migrationCategorySelect.appendChild(defaultOpt);
+
+            const allCats = state.categories.filter(c => c && c.toLowerCase() !== 'uncategorized');
+            allCats.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat;
+                opt.textContent = `📁 ${cat}`;
+                elements.migrationCategorySelect.appendChild(opt);
+            });
+
+            if (currentSelected && (currentSelected === 'Uncategorized' || allCats.includes(currentSelected))) {
+                elements.migrationCategorySelect.value = currentSelected;
+            } else {
+                elements.migrationCategorySelect.value = 'Uncategorized';
+            }
+        }
+
+        // Initialize table rows if empty
+        if (elements.migrationTableBody && elements.migrationTableBody.children.length === 0) {
+            for (let i = 0; i < 4; i++) {
+                addMigrationRow();
+            }
+        }
+
+        updateMigrationStats();
+    }
+
+    function addMigrationRow(title = '', uname = '', password = '', notes = '') {
+        if (!elements.migrationTableBody) return null;
+
+        const rowCount = elements.migrationTableBody.children.length + 1;
+        const tr = document.createElement('tr');
+        tr.className = 'migration-row';
+        tr.innerHTML = `
+            <td class="mig-row-num">${rowCount}</td>
+            <td>
+                <input type="text" class="mig-input mig-title-input" placeholder="e.g. Google, GitHub" value="${escapeHtml(title)}">
+            </td>
+            <td>
+                <input type="text" class="mig-input mig-uname-input" placeholder="user@email.com or username" value="${escapeHtml(uname)}" autocomplete="off">
+            </td>
+            <td>
+                <div class="mig-pw-wrapper">
+                    <input type="password" class="mig-input mig-pw-input" placeholder="Password" value="${escapeHtml(password)}" autocomplete="new-password">
+                    <div class="mig-pw-actions">
+                        <button type="button" class="mig-inline-btn mig-toggle-pw-btn" title="Peek / Hide Password" tabindex="-1">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </button>
+                        <button type="button" class="mig-inline-btn mig-gen-pw-btn" title="Generate Secure Password" tabindex="-1">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </td>
+            <td>
+                <input type="text" class="mig-input mig-notes-input" placeholder="Notes (optional)" value="${escapeHtml(notes)}">
+            </td>
+            <td style="text-align: center;">
+                <button type="button" class="mig-inline-btn mig-btn-delete-row" title="Delete Row" tabindex="-1">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="3 6 5 6 21 6"></polyline>
+                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                </button>
+            </td>
+        `;
+
+        const titleInput = tr.querySelector('.mig-title-input');
+        const unameInput = tr.querySelector('.mig-uname-input');
+        const pwInput = tr.querySelector('.mig-pw-input');
+        const notesInput = tr.querySelector('.mig-notes-input');
+        const togglePwBtn = tr.querySelector('.mig-toggle-pw-btn');
+        const genPwBtn = tr.querySelector('.mig-gen-pw-btn');
+        const deleteBtn = tr.querySelector('.mig-btn-delete-row');
+
+        // Toggle password show/hide
+        togglePwBtn.addEventListener('click', () => {
+            const isPassword = pwInput.type === 'password';
+            pwInput.type = isPassword ? 'text' : 'password';
+            togglePwBtn.style.color = isPassword ? 'var(--primary-bg)' : '';
+        });
+
+        // Generate password for this row
+        genPwBtn.addEventListener('click', () => {
+            pwInput.value = generateSecurePassword(16, true, true, true, true);
+            pwInput.type = 'text';
+            togglePwBtn.style.color = 'var(--primary-bg)';
+            updateMigrationStats();
+        });
+
+        // Delete row
+        deleteBtn.addEventListener('click', () => {
+            tr.remove();
+            if (elements.migrationTableBody.children.length === 0) {
+                addMigrationRow();
+            }
+            renumberMigrationRows();
+            updateMigrationStats();
+        });
+
+        // Auto suggestion for title based on email/service
+        unameInput.addEventListener('blur', () => {
+            if (!titleInput.value.trim() && unameInput.value.trim()) {
+                const val = unameInput.value.trim();
+                const atIdx = val.lastIndexOf('@');
+                if (atIdx > 0 && atIdx < val.length - 1) {
+                    const domain = val.slice(atIdx + 1).split('.')[0];
+                    if (domain) {
+                        titleInput.value = domain.charAt(0).toUpperCase() + domain.slice(1);
+                    }
+                }
+            }
+        });
+
+        // Inputs change updates stats
+        [titleInput, unameInput, pwInput, notesInput].forEach(inp => {
+            inp.addEventListener('input', () => {
+                updateMigrationStats();
+            });
+        });
+
+        // Keyboard flow: Tab or Enter on pwInput or notesInput
+        pwInput.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || (e.key === 'Tab' && !e.shiftKey)) && !notesInput.value) {
+                const isLastRow = tr === elements.migrationTableBody.lastElementChild;
+                if (isLastRow && (unameInput.value.trim() || pwInput.value)) {
+                    if (e.key === 'Enter') e.preventDefault();
+                    const newTr = addMigrationRow();
+                    updateMigrationStats();
+                    const nextUname = newTr.querySelector('.mig-uname-input');
+                    if (nextUname) {
+                        setTimeout(() => nextUname.focus(), 20);
+                    }
+                }
+            }
+        });
+
+        notesInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const isLastRow = tr === elements.migrationTableBody.lastElementChild;
+                if (isLastRow) {
+                    const newTr = addMigrationRow();
+                    updateMigrationStats();
+                    const nextUname = newTr.querySelector('.mig-uname-input');
+                    if (nextUname) nextUname.focus();
+                }
+            }
+        });
+
+        elements.migrationTableBody.appendChild(tr);
+        return tr;
+    }
+
+    function renumberMigrationRows() {
+        if (!elements.migrationTableBody) return;
+        elements.migrationTableBody.querySelectorAll('tr').forEach((tr, idx) => {
+            const numEl = tr.querySelector('.mig-row-num');
+            if (numEl) numEl.textContent = idx + 1;
+        });
+    }
+
+    function updateMigrationStats() {
+        if (!elements.migrationTableBody) return;
+        const rows = elements.migrationTableBody.querySelectorAll('tr');
+        let total = rows.length;
+        let ready = 0;
+
+        rows.forEach(tr => {
+            const uname = (tr.querySelector('.mig-uname-input')?.value || '').trim();
+            const pw = tr.querySelector('.mig-pw-input')?.value || '';
+            const unameEl = tr.querySelector('.mig-uname-input');
+            const pwEl = tr.querySelector('.mig-pw-input');
+
+            const hasAny = uname || pw;
+            const isValid = uname && pw;
+
+            if (unameEl) unameEl.classList.toggle('is-invalid', hasAny && !uname);
+            if (pwEl) pwEl.classList.toggle('is-invalid', hasAny && !pw);
+
+            if (isValid) {
+                ready++;
+            }
+        });
+
+        if (elements.migSummaryTotal) elements.migSummaryTotal.textContent = total;
+        if (elements.migSummaryReady) elements.migSummaryReady.textContent = ready;
+        if (elements.migTabRowCount) elements.migTabRowCount.textContent = ready;
+
+        const targetCat = elements.migrationCategorySelect?.value || 'Uncategorized';
+        const folderDisplayName = targetCat === 'Uncategorized' ? 'Default Folder (Uncategorized)' : targetCat;
+        if (elements.migSummaryDest) elements.migSummaryDest.textContent = folderDisplayName;
+
+        if (elements.migSaveAllSubmitBtn) {
+            elements.migSaveAllSubmitBtn.disabled = ready === 0;
+        }
+        if (elements.migSaveSubmitBtnText) {
+            if (ready === 0) {
+                elements.migSaveSubmitBtnText.textContent = `Save All to ${folderDisplayName}`;
+            } else {
+                elements.migSaveSubmitBtnText.textContent = `Save ${ready} Password${ready === 1 ? '' : 's'} to ${folderDisplayName}`;
+            }
+        }
+    }
+
+    function parseBulkTextToTable() {
+        if (!elements.migBulkTextarea) return;
+        const text = elements.migBulkTextarea.value.trim();
+        if (!text) {
+            showToast('Please paste or type text first', 'info');
+            return;
+        }
+
+        const lines = text.split(/\r?\n/).map(l => l.trim()).filter(l => l && !l.startsWith('#') && !l.startsWith('//'));
+        if (lines.length === 0) {
+            showToast('No valid lines found to parse', 'warning');
+            return;
+        }
+
+        const chosenSep = elements.migDelimiterSelect?.value || 'auto';
+        let parsedCount = 0;
+
+        lines.forEach(line => {
+            let sep = ',';
+            if (chosenSep === 'auto') {
+                if (line.includes('\t')) sep = '\t';
+                else if (line.includes(',')) sep = ',';
+                else if (line.includes(':') && !line.startsWith('http')) sep = ':';
+                else if (line.includes('|')) sep = '|';
+            } else {
+                sep = chosenSep === '\\t' ? '\t' : chosenSep;
+            }
+
+            const parts = line.split(sep).map(p => p.trim());
+            if (parts.length >= 2) {
+                let title = '';
+                let uname = '';
+                let pw = '';
+                let notes = '';
+
+                if (parts.length === 2) {
+                    uname = parts[0];
+                    pw = parts[1];
+                } else if (parts.length === 3) {
+                    title = parts[0];
+                    uname = parts[1];
+                    pw = parts[2];
+                } else {
+                    title = parts[0];
+                    uname = parts[1];
+                    pw = parts[2];
+                    notes = parts.slice(3).join(', ');
+                }
+
+                // If table only has completely blank initial rows, clean them first
+                if (elements.migrationTableBody) {
+                    const firstTr = elements.migrationTableBody.children[0];
+                    if (elements.migrationTableBody.children.length === 1 && firstTr) {
+                        const u = firstTr.querySelector('.mig-uname-input')?.value.trim();
+                        const p = firstTr.querySelector('.mig-pw-input')?.value;
+                        if (!u && !p) firstTr.remove();
+                    }
+                }
+
+                addMigrationRow(title, uname, pw, notes);
+                parsedCount++;
+            }
+        });
+
+        renumberMigrationRows();
+        updateMigrationStats();
+
+        // Switch to Table tab
+        if (elements.migTabBtnTable) elements.migTabBtnTable.click();
+        showToast(`Successfully parsed ${parsedCount} credential${parsedCount === 1 ? '' : 's'} into table!`);
+    }
+
+    function setupMigrationFileDropzone() {
+        if (!elements.migDropZone || !elements.migFileInput) return;
+
+        if (elements.migBrowseFileBtn) {
+            elements.migBrowseFileBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                elements.migFileInput.click();
+            });
+        }
+
+        elements.migDropZone.addEventListener('click', () => {
+            elements.migFileInput.click();
+        });
+
+        elements.migDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            elements.migDropZone.classList.add('drag-over');
+        });
+
+        elements.migDropZone.addEventListener('dragleave', () => {
+            elements.migDropZone.classList.remove('drag-over');
+        });
+
+        elements.migDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            elements.migDropZone.classList.remove('drag-over');
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                processCsvFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        elements.migFileInput.addEventListener('change', () => {
+            if (elements.migFileInput.files && elements.migFileInput.files[0]) {
+                processCsvFile(elements.migFileInput.files[0]);
+            }
+        });
+    }
+
+    function processCsvFile(file) {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const content = e.target.result;
+            parseCsvContentToTable(content, file.name);
+        };
+        reader.readAsText(file);
+    }
+
+    function parseCsvContentToTable(csvText, filename = 'file') {
+        const lines = csvText.split(/\r?\n/).map(l => l.trim()).filter(l => l);
+        if (lines.length === 0) {
+            showToast('The selected file is empty.', 'warning');
+            return;
+        }
+
+        // Clean initial empty row in table if any
+        if (elements.migrationTableBody) {
+            const firstTr = elements.migrationTableBody.children[0];
+            if (elements.migrationTableBody.children.length === 1 && firstTr) {
+                const u = firstTr.querySelector('.mig-uname-input')?.value.trim();
+                const p = firstTr.querySelector('.mig-pw-input')?.value;
+                if (!u && !p) firstTr.remove();
+            }
+        }
+
+        // Simple CSV splitter handling quoted cells
+        function parseCsvRow(row) {
+            const result = [];
+            let current = '';
+            let inQuotes = false;
+            for (let i = 0; i < row.length; i++) {
+                const char = row[i];
+                if (char === '"' || char === "'") {
+                    inQuotes = !inQuotes;
+                } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = '';
+                } else {
+                    current += char;
+                }
+            }
+            result.push(current.trim());
+            return result;
+        }
+
+        const headerTokens = parseCsvRow(lines[0]).map(h => h.toLowerCase().replace(/[^a-z0-9]/g, ''));
+        const hasHeader = headerTokens.some(t => t.includes('user') || t.includes('pass') || t.includes('name') || t.includes('title') || t.includes('url'));
+
+        let unameIdx = -1, pwIdx = -1, titleIdx = -1, notesIdx = -1;
+        let startLine = 0;
+
+        if (hasHeader) {
+            startLine = 1;
+            headerTokens.forEach((t, idx) => {
+                if (unameIdx === -1 && (t.includes('username') || t.includes('login') || t.includes('email') || t === 'user')) unameIdx = idx;
+                else if (pwIdx === -1 && (t.includes('password') || t === 'pw' || t === 'pass')) pwIdx = idx;
+                else if (titleIdx === -1 && (t.includes('name') || t.includes('title') || t.includes('service') || t.includes('site') || t.includes('url'))) titleIdx = idx;
+                else if (notesIdx === -1 && (t.includes('note') || t.includes('comment') || t.includes('desc'))) notesIdx = idx;
+            });
+        }
+
+        // Fallbacks
+        if (unameIdx === -1) unameIdx = 0;
+        if (pwIdx === -1) pwIdx = 1;
+
+        let parsedCount = 0;
+        for (let i = startLine; i < lines.length; i++) {
+            const cols = parseCsvRow(lines[i]);
+            if (cols.length < 2) continue;
+
+            const uname = (unameIdx < cols.length ? cols[unameIdx] : cols[0]) || '';
+            const pw = (pwIdx < cols.length ? cols[pwIdx] : cols[1]) || '';
+            let title = titleIdx !== -1 && titleIdx < cols.length ? cols[titleIdx] : '';
+            const notes = notesIdx !== -1 && notesIdx < cols.length ? cols[notesIdx] : '';
+
+            // Clean title if it was a URL
+            if (title && (title.startsWith('http://') || title.startsWith('https://'))) {
+                try {
+                    title = new URL(title).hostname.replace('www.', '');
+                } catch (_) {}
+            }
+
+            if (uname || pw) {
+                addMigrationRow(title, uname, pw, notes);
+                parsedCount++;
+            }
+        }
+
+        renumberMigrationRows();
+        updateMigrationStats();
+
+        if (elements.migTabBtnTable) elements.migTabBtnTable.click();
+        showToast(`Imported ${parsedCount} account${parsedCount === 1 ? '' : 's'} from ${filename}!`);
+    }
+
+    async function executeSaveAllMigration() {
+        if (!elements.migrationTableBody) return;
+
+        const targetCat = (elements.migrationCategorySelect?.value || 'Uncategorized').trim() || 'Uncategorized';
+        const rows = elements.migrationTableBody.querySelectorAll('tr');
+        const validEntries = [];
+
+        rows.forEach(tr => {
+            const uname = (tr.querySelector('.mig-uname-input')?.value || '').trim();
+            const password = tr.querySelector('.mig-pw-input')?.value || '';
+            let title = (tr.querySelector('.mig-title-input')?.value || '').trim();
+            const notes = (tr.querySelector('.mig-notes-input')?.value || '').trim();
+
+            if (uname && password) {
+                if (!title) {
+                    const atIdx = uname.lastIndexOf('@');
+                    if (atIdx > 0 && atIdx < uname.length - 1) {
+                        const domain = uname.slice(atIdx + 1).split('.')[0];
+                        title = domain.charAt(0).toUpperCase() + domain.slice(1);
+                    } else {
+                        title = uname;
+                    }
+                }
+
+                const custom_fields = [];
+                if (notes) {
+                    custom_fields.push({ name: 'Notes', value: notes, is_secret: false });
+                }
+
+                validEntries.push({
+                    title,
+                    uname,
+                    password,
+                    category: targetCat,
+                    custom_fields,
+                    avatar: null
+                });
+            }
+        });
+
+        if (validEntries.length === 0) {
+            showToast('No ready entries found to save. Please enter username and password.', 'warning');
+            return;
+        }
+
+        // Show progress overlay
+        if (elements.migProgressBox) elements.migProgressBox.classList.remove('hidden');
+        if (elements.migSaveAllSubmitBtn) elements.migSaveAllSubmitBtn.disabled = true;
+        if (elements.migSuccessBox) elements.migSuccessBox.classList.add('hidden');
+
+        let savedCount = 0;
+        let hasBulkApi = true;
+
+        // Try high-speed bulk API first
+        try {
+            const bulkRes = await apiRequest('/api/entries/bulk', 'POST', {
+                entries: validEntries,
+                category: targetCat
+            });
+            if (bulkRes.ok) {
+                savedCount = bulkRes.data.count || validEntries.length;
+            } else {
+                hasBulkApi = false;
+            }
+        } catch (err) {
+            hasBulkApi = false;
+        }
+
+        // Fallback to sequential /api/entries if bulk is unavailable
+        if (!hasBulkApi) {
+            for (let i = 0; i < validEntries.length; i++) {
+                const item = validEntries[i];
+                const pct = Math.round(((i + 1) / validEntries.length) * 100);
+                if (elements.migProgressFill) elements.migProgressFill.style.width = `${pct}%`;
+                if (elements.migProgressStatus) {
+                    elements.migProgressStatus.textContent = `Saving ${i + 1} of ${validEntries.length}: "${item.title || item.uname}" (${pct}%)`;
+                }
+
+                const res = await apiRequest('/api/entries', 'POST', item);
+                if (res.ok) {
+                    savedCount++;
+                }
+            }
+        }
+
+        // Hide progress
+        if (elements.migProgressBox) elements.migProgressBox.classList.add('hidden');
+
+        if (savedCount > 0) {
+            // Update and reload vault entries
+            await loadEntries();
+
+            // Display success celebratory banner
+            if (elements.migSuccessBox) {
+                elements.migSuccessBox.classList.remove('hidden');
+                if (elements.migSuccessDetails) {
+                    const destText = targetCat === 'Uncategorized' ? 'Default Folder (Uncategorized)' : `folder "${targetCat}"`;
+                    elements.migSuccessDetails.textContent = `Successfully encrypted and migrated ${savedCount} password${savedCount === 1 ? '' : 's'} into ${destText}!`;
+                }
+            }
+
+            showToast(`🎉 Migrated ${savedCount} passwords to ${targetCat}!`);
+
+            // Clear the table to fresh 4 empty rows
+            if (elements.migrationTableBody) {
+                elements.migrationTableBody.innerHTML = '';
+                for (let i = 0; i < 4; i++) addMigrationRow();
+            }
+            updateMigrationStats();
+        } else {
+            showToast('Failed to save migration entries. Make sure your vault is unlocked.', 'danger');
+            if (elements.migSaveAllSubmitBtn) elements.migSaveAllSubmitBtn.disabled = false;
+        }
+    }
+
     // Boot App
     initPreferences();
     setupCategoryCombobox();
+    setupCategoryIconPickers();
+    setupMigrationPage();
+    if (window.VaultKeyEmojiLibrary) {
+        window.VaultKeyEmojiLibrary.init();
+    }
     checkStatus();
 
 })();
