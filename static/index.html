@@ -692,7 +692,7 @@
                     </svg>
                 </button>
             </div>
-            <form id="newCatForm" class="modal-form">
+            <form id="newCatForm" class="modal-form" autocomplete="off">
                 <div class="form-group">
                     <label for="newCatNameInput">Category Name</label>
                     <input type="text" id="newCatNameInput" placeholder="e.g. Gaming, Office, Entertainment, Banking" required autofocus autocomplete="off">
@@ -749,7 +749,7 @@
                     </svg>
                 </button>
             </div>
-            <form id="editCatForm" class="modal-form">
+            <form id="editCatForm" class="modal-form" autocomplete="off">
                 <input type="hidden" id="editCatOldNameInput" value="">
                 <div class="form-group">
                     <label for="editCatNewNameInput">Category Name</label>
@@ -837,13 +837,13 @@
                 </button>
             </div>
             
-            <form id="entryForm" class="modal-form">
+            <form id="entryForm" class="modal-form" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 <input type="hidden" id="formEntryId" value="">
 
                 <div class="form-row form-grid-2">
                     <div class="form-group">
                         <label for="formTitle">Service / Website Name</label>
-                        <input type="text" id="formTitle" placeholder="e.g. Steam, GitHub, Netflix, Work Portal" required>
+                        <input type="text" id="formTitle" placeholder="e.g. Steam, GitHub, Netflix, Work Portal" required autocomplete="off" autocorrect="off" spellcheck="false" data-lpignore="true">
                     </div>
                     <div class="form-group">
                         <label for="formCategory">Category (Optional)</label>
@@ -891,7 +891,7 @@
                             <button type="button" class="avatar-chip" data-avatar="emoji:🛡️" title="Shield">🛡️</button>
                             <button type="button" class="avatar-chip" id="entryEmojiPickerBtn" title="Open full emoji library (600+ emojis)" style="font-weight: 600;">🌟 Browse All</button>
                         </div>
-                        <input type="text" class="avatar-custom-input" id="avatarCustomInput" placeholder="Custom emoji..." maxlength="6" title="Enter custom emoji">
+                        <input type="text" class="avatar-custom-input" id="avatarCustomInput" placeholder="Custom emoji..." maxlength="6" title="Enter custom emoji" autocomplete="off">
                     </div>
                 </div>
 
@@ -908,7 +908,7 @@
                             <button type="button" class="badge-btn uname-badge" data-preset="personal">👤 Personal</button>
                         </div>
                     </div>
-                    <input type="text" id="formUsername" placeholder="e.g. user@example.com or click a badge above" required>
+                    <input type="text" id="formUsername" placeholder="e.g. user@example.com or click a badge above" required autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                 </div>
 
                 <!-- Password with Presets -->
@@ -924,7 +924,7 @@
                         </div>
                     </div>
                     <div class="password-input-wrap">
-                        <input type="password" id="formPassword" placeholder="Enter secure password or click preset" required class="mono-input">
+                        <input type="password" id="formPassword" placeholder="Enter secure password or click preset" required class="mono-input" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                     </div>
                     <div class="strength-meter">
                         <div class="strength-bar" id="strengthBar"></div>
@@ -1096,15 +1096,15 @@
                 </div>
             </div>
 
-            <form id="setupForm" class="modal-form">
+            <form id="setupForm" class="modal-form" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 <div class="form-group">
                     <label for="setupPassword">Create Master Password</label>
-                    <input type="password" id="setupPassword" placeholder="Minimum 4 characters" required minlength="4">
+                    <input type="password" id="setupPassword" placeholder="Minimum 4 characters" required minlength="4" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                 </div>
 
                 <div class="form-group">
                     <label for="setupPasswordConfirm">Confirm Master Password</label>
-                    <input type="password" id="setupPasswordConfirm" placeholder="Re-enter password" required minlength="4">
+                    <input type="password" id="setupPasswordConfirm" placeholder="Re-enter password" required minlength="4" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                 </div>
 
                 <div class="callout-box">
@@ -1163,10 +1163,10 @@
                 </div>
             </div>
 
-            <form id="loginForm" class="modal-form">
+            <form id="loginForm" class="modal-form" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 <div class="form-group">
                     <label for="loginPassword">Master Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter master password" required autofocus>
+                    <input type="password" id="loginPassword" placeholder="Enter master password" required autofocus autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                 </div>
 
                 <div id="loginErrorMsg" class="error-banner hidden">Incorrect password. Please try again.</div>
@@ -1195,15 +1195,15 @@
                 </button>
             </div>
 
-            <form id="recoverForm" class="modal-form">
+            <form id="recoverForm" class="modal-form" autocomplete="off" data-lpignore="true" data-1p-ignore="true" data-bwignore="true" data-form-type="other">
                 <div class="form-group">
                     <label for="recoverKeyInput">Emergency Recovery Key</label>
-                    <input type="text" id="recoverKeyInput" placeholder="Paste your saved recovery key" required class="mono-input">
+                    <input type="text" id="recoverKeyInput" placeholder="Paste your saved recovery key" required class="mono-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true">
                 </div>
 
                 <div class="form-group">
                     <label for="recoverNewPwInput">New Master Password</label>
-                    <input type="password" id="recoverNewPwInput" placeholder="Enter new master password" required minlength="4">
+                    <input type="password" id="recoverNewPwInput" placeholder="Enter new master password" required minlength="4" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-lpignore="true" data-1p-ignore="true" data-bwignore="true">
                 </div>
 
                 <div class="modal-footer">

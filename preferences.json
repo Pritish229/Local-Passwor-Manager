@@ -1,7 +1,7 @@
 {
-    "layout": "sidebar",
+    "layout": "classic",
     "theme": "dark",
-    "view_mode": "table",
+    "view_mode": "grid",
     "sidebar_collapsed": false,
     "button_colors": {
         "dark": {

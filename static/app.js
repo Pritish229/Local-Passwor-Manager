@@ -13,6 +13,22 @@
 (function () {
     'use strict';
 
+    // Helper to identify any category context menu interactive target
+    function isCategoryContextTarget(el) {
+        if (!el || !(el instanceof Element)) return false;
+        return !!(
+            el.closest('.category-nav-item') ||
+            el.closest('#categoryContextMenu') ||
+            el.closest('.nav-item[data-category]') ||
+            el.closest('#categoryNavList li') ||
+            el.closest('.saas-tab[data-category]') ||
+            el.closest('.saas-dropdown-item') ||
+            el.closest('.category-folder-card') ||
+            el.closest('[data-category]') ||
+            el.closest('[data-cat]')
+        );
+    }
+
     // ==========================================
     // DESKTOP APP MODE SHIELD
     // 1. Disable browser context menu (Image 1)
@@ -24,8 +40,21 @@
         window.alert = function () {};
         window.prompt = function () { return null; };
         window.onbeforeunload = null;
+        const lockSessionOnClose = () => {
+            try {
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon('/api/logout');
+                } else {
+                    const xhr = new XMLHttpRequest();
+                    xhr.open('POST', '/api/logout', false);
+                    xhr.send();
+                }
+            } catch (_) {}
+        };
+        window.addEventListener('pagehide', lockSessionOnClose);
         window.addEventListener('beforeunload', function (e) {
             delete e['returnValue'];
+            lockSessionOnClose();
         });
 
         // Suppress browser console output
@@ -54,8 +83,17 @@
         // Suppress browser right-click context menu (Image 1)
         document.addEventListener('contextmenu', function (e) {
             // Permit custom in-app category right-click menu
-            if (e.target && (e.target.closest('.category-nav-item') || e.target.closest('#categoryContextMenu'))) {
+            if (isCategoryContextTarget(e.target)) {
+                // If clicked directly inside the category context menu, suppress native browser menu
+                if (e.target && e.target.closest && e.target.closest('#categoryContextMenu')) {
+                    e.preventDefault();
+                }
                 return;
+            }
+            // Dismiss open category context menu if clicking anywhere outside
+            const catMenu = document.getElementById('categoryContextMenu');
+            if (catMenu) {
+                catMenu.classList.add('hidden');
             }
             e.preventDefault();
             e.stopPropagation();
@@ -648,9 +686,35 @@
         }
     }
 
+    // Completely suppress browser autofill and password saving suggestions
+    function disableBrowserAutofill(root) {
+        const container = root || document;
+        container.querySelectorAll('form').forEach(form => {
+            form.setAttribute('autocomplete', 'off');
+            form.setAttribute('data-lpignore', 'true');
+            form.setAttribute('data-1p-ignore', 'true');
+            form.setAttribute('data-bwignore', 'true');
+            form.setAttribute('data-form-type', 'other');
+        });
+        container.querySelectorAll('input').forEach(input => {
+            if (input.type === 'password') {
+                input.setAttribute('autocomplete', 'new-password');
+            } else if (!input.getAttribute('autocomplete')) {
+                input.setAttribute('autocomplete', 'off');
+            }
+            input.setAttribute('autocorrect', 'off');
+            input.setAttribute('autocapitalize', 'off');
+            input.setAttribute('spellcheck', 'false');
+            input.setAttribute('data-lpignore', 'true');
+            input.setAttribute('data-1p-ignore', 'true');
+            input.setAttribute('data-bwignore', 'true');
+        });
+    }
+
     // Modal Control Helper
     function openModal(modalEl) {
         if (!modalEl) return;
+        disableBrowserAutofill(modalEl);
         modalEl.classList.remove('hidden');
     }
 
@@ -859,28 +923,44 @@
 
     // Common category context menu trigger (Sidebar & Folder Cards)
     function showCategoryMenu(e, cat, count, isSystem) {
-        e.preventDefault();
-        e.stopPropagation();
-        const liveCount = (state.entries || []).filter(item => (item.category || 'Uncategorized').toLowerCase() === cat.toLowerCase()).length;
-        state.contextCategory = { cat, count: liveCount, isSystem };
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const liveCount = (state.entries || []).filter(item => (item.category || 'Uncategorized').toLowerCase() === (cat || '').toLowerCase()).length;
+        state.contextCategory = { cat, count: liveCount, isSystem: !!isSystem };
 
-        if (elements.contextDeleteCategoryBtn) {
+        const deleteBtn = elements.contextDeleteCategoryBtn || document.getElementById('contextDeleteCategoryBtn');
+        if (deleteBtn) {
             if (isSystem || liveCount > 0) {
-                elements.contextDeleteCategoryBtn.classList.add('disabled');
-                elements.contextDeleteCategoryBtn.setAttribute('title', isSystem ? 'System category cannot be deleted' : `Cannot delete: contains ${liveCount} credential(s) (only empty categories can be deleted)`);
+                deleteBtn.classList.add('disabled');
+                deleteBtn.setAttribute('title', isSystem ? 'System category cannot be deleted' : `Cannot delete: contains ${liveCount} credential(s) (only empty categories can be deleted)`);
             } else {
-                elements.contextDeleteCategoryBtn.classList.remove('disabled');
-                elements.contextDeleteCategoryBtn.removeAttribute('title');
+                deleteBtn.classList.remove('disabled');
+                deleteBtn.removeAttribute('title');
             }
         }
 
+        const menu = elements.categoryContextMenu || document.getElementById('categoryContextMenu');
+        if (!menu) return;
+
+        let clientX = e ? e.clientX : undefined;
+        let clientY = e ? e.clientY : undefined;
+        if ((clientX === undefined || (clientX === 0 && clientY === 0)) && e && e.currentTarget && e.currentTarget.getBoundingClientRect) {
+            const rect = e.currentTarget.getBoundingClientRect();
+            clientX = rect.left + rect.width / 2;
+            clientY = rect.bottom;
+        }
+        clientX = Number.isFinite(clientX) ? clientX : 100;
+        clientY = Number.isFinite(clientY) ? clientY : 100;
+
         const menuWidth = 160;
         const menuHeight = 85;
-        const x = Math.min(e.clientX, window.innerWidth - menuWidth - 8);
-        const y = Math.min(e.clientY, window.innerHeight - menuHeight - 8);
-        elements.categoryContextMenu.style.left = `${Math.max(8, x)}px`;
-        elements.categoryContextMenu.style.top = `${Math.max(8, y)}px`;
-        elements.categoryContextMenu.classList.remove('hidden');
+        const x = Math.min(clientX, window.innerWidth - menuWidth - 8);
+        const y = Math.min(clientY, window.innerHeight - menuHeight - 8);
+        menu.style.left = `${Math.max(8, x)}px`;
+        menu.style.top = `${Math.max(8, y)}px`;
+        menu.classList.remove('hidden');
     }
 
     // Render Categories & Setup Drop Targets with Overflow Management (Issue 1)
@@ -930,8 +1010,9 @@
             const isSystem = cat.toLowerCase() === 'uncategorized';
 
             const li = document.createElement('li');
+            li.className = 'category-nav-item';
             li.innerHTML = `
-                <button class="nav-item ${state.currentFilter === cat ? 'active' : ''}" data-filter="${escapeHtml(cat)}" data-category="${escapeHtml(cat)}" title="Right-click for options (Edit / Delete)">
+                <button class="nav-item category-nav-item ${state.currentFilter === cat ? 'active' : ''}" data-filter="${escapeHtml(cat)}" data-category="${escapeHtml(cat)}" title="Right-click for options (Edit / Delete)">
                     ${getCategoryIconHtml(cat)}
                     <span class="nav-label">${escapeHtml(cat)}</span>
                     <span class="nav-count">${count}</span>
@@ -980,7 +1061,7 @@
 
                 const tabBtn = document.createElement('button');
                 tabBtn.type = 'button';
-                tabBtn.className = `saas-tab ${state.currentFilter === cat ? 'active' : ''}`;
+                tabBtn.className = `saas-tab category-nav-item ${state.currentFilter === cat ? 'active' : ''}`;
                 tabBtn.setAttribute('data-tab-filter', cat);
                 tabBtn.setAttribute('data-category', cat);
                 tabBtn.setAttribute('title', `${cat} (${count} passwords) - Right-click for options`);
@@ -1022,9 +1103,10 @@
 
                         const itemBtn = document.createElement('button');
                         itemBtn.type = 'button';
-                        itemBtn.className = `saas-dropdown-item ${state.currentFilter === cat ? 'active' : ''}`;
+                        itemBtn.className = `saas-dropdown-item category-nav-item ${state.currentFilter === cat ? 'active' : ''}`;
                         itemBtn.setAttribute('data-tab-filter', cat);
                         itemBtn.setAttribute('data-cat', cat);
+                        itemBtn.setAttribute('data-category', cat);
                         itemBtn.innerHTML = `
                             <span class="saas-dropdown-name">${escapeHtml(cat)}</span>
                             <span class="saas-dropdown-count">${count}</span>
@@ -1276,7 +1358,7 @@
             const previewText = count === 0 ? 'Empty folder' : (previewNames + (count > 3 ? ` +${count - 3} more` : ''));
 
             const card = document.createElement('div');
-            card.className = 'category-folder-card';
+            card.className = 'category-folder-card category-nav-item';
             card.setAttribute('data-category', catName);
             card.innerHTML = `
                 <div class="folder-card-top">
@@ -2205,20 +2287,30 @@
     });
 
     // Right-Click Context Menu Actions (Edit & Delete Category)
-    if (elements.contextEditCategoryBtn) {
-        elements.contextEditCategoryBtn.addEventListener('click', () => {
-            elements.categoryContextMenu.classList.add('hidden');
+    const contextEditBtn = elements.contextEditCategoryBtn || document.getElementById('contextEditCategoryBtn');
+    if (contextEditBtn) {
+        contextEditBtn.addEventListener('click', (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const menu = elements.categoryContextMenu || document.getElementById('categoryContextMenu');
+            if (menu) menu.classList.add('hidden');
             if (state.contextCategory) {
                 openEditCategoryModal(state.contextCategory.cat);
             }
         });
     }
 
-    if (elements.contextDeleteCategoryBtn) {
-        elements.contextDeleteCategoryBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            elements.categoryContextMenu.classList.add('hidden');
+    const contextDeleteBtn = elements.contextDeleteCategoryBtn || document.getElementById('contextDeleteCategoryBtn');
+    if (contextDeleteBtn) {
+        contextDeleteBtn.addEventListener('click', (e) => {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            const menu = elements.categoryContextMenu || document.getElementById('categoryContextMenu');
+            if (menu) menu.classList.add('hidden');
             if (state.contextCategory) {
                 const { cat, isSystem } = state.contextCategory;
                 if (isSystem) {
@@ -4955,14 +5047,16 @@
 
     // Dismiss category context menu on outside click or global contextmenu
     document.addEventListener('click', (e) => {
-        if (elements.categoryContextMenu && !e.target.closest('#categoryContextMenu')) {
-            elements.categoryContextMenu.classList.add('hidden');
+        const catMenu = elements.categoryContextMenu || document.getElementById('categoryContextMenu');
+        if (catMenu && !e.target.closest('#categoryContextMenu')) {
+            catMenu.classList.add('hidden');
         }
     });
 
     document.addEventListener('contextmenu', (e) => {
-        if (elements.categoryContextMenu && !e.target.closest('.nav-item[data-category]') && !e.target.closest('.category-folder-card') && !e.target.closest('.saas-tab[data-category]')) {
-            elements.categoryContextMenu.classList.add('hidden');
+        const catMenu = elements.categoryContextMenu || document.getElementById('categoryContextMenu');
+        if (catMenu && !isCategoryContextTarget(e.target)) {
+            catMenu.classList.add('hidden');
         }
     });
 
@@ -5728,6 +5822,7 @@ Spotify, music.fan99@web.de, AudioVibe$33`;
 
     // Boot App
     initPreferences();
+    disableBrowserAutofill();
     setupCategoryCombobox();
     setupCategoryIconPickers();
     setupMigrationPage();

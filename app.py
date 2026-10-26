@@ -6,10 +6,14 @@ import mimetypes
 import webbrowser
 from pathlib import Path
 from http import HTTPStatus
-from http.server import HTTPServer, SimpleHTTPRequestHandler
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 import urllib.parse
 from typing import Optional
 from cryptography.fernet import Fernet
+
+class ThreadedVaultServer(ThreadingHTTPServer):
+    allow_reuse_address = True
+    daemon_threads = True
 
 # Safe standard output handling when running without console (--noconsole / frozen)
 if sys.stdout is None:
@@ -148,36 +152,31 @@ def reset_preferences(section: Optional[str] = None) -> dict:
         pass
     return current
 
+import threading
+
+SESSION_FILE = BASE_DIR / ".session_token"
+if SESSION_FILE.is_file():
+    try:
+        os.remove(SESSION_FILE)
+    except Exception:
+        pass
+
 class SessionState:
+    def __init__(self):
+        self._fernet: Optional[Fernet] = None
+
     @property
     def vault_fernet(self) -> Optional[Fernet]:
-        if not hasattr(self, "_fernet") or self._fernet is None:
-            if SESSION_FILE.is_file():
-                try:
-                    with open(SESSION_FILE, "rb") as f:
-                        key = f.read().strip()
-                        if key:
-                            self._fernet = Fernet(key)
-                except Exception:
-                    self._fernet = None
         return getattr(self, "_fernet", None)
 
     @vault_fernet.setter
     def vault_fernet(self, f: Optional[Fernet]):
         self._fernet = f
-        if f is not None:
+        if f is None and SESSION_FILE.is_file():
             try:
-                raw_key = base64.urlsafe_b64encode(f._signing_key + f._encryption_key)
-                with open(SESSION_FILE, "wb") as sf:
-                    sf.write(raw_key)
+                os.remove(SESSION_FILE)
             except Exception:
                 pass
-        else:
-            if SESSION_FILE.is_file():
-                try:
-                    os.remove(SESSION_FILE)
-                except Exception:
-                    pass
 
 session = SessionState()
 
@@ -820,7 +819,8 @@ import subprocess
 def launch_desktop_window(url: str):
     """
     Launch application in standalone desktop window mode.
-    Disables browser address bar, navigation buttons, and bookmarks tab strip.
+    Disables browser address bar, navigation buttons, bookmarks tab strip,
+    browser password saving prompts, and autofill popups.
     """
     candidates = [
         os.path.expandvars(r"%ProgramFiles(x86)%\Microsoft\Edge\Application\msedge.exe"),
@@ -832,8 +832,28 @@ def launch_desktop_window(url: str):
     ]
     
     app_profile = os.path.join(os.environ.get('LOCALAPPDATA', os.path.expanduser('~')), 'VaultKey', 'AppProfile')
+    default_dir = os.path.join(app_profile, "Default")
     try:
-        os.makedirs(app_profile, exist_ok=True)
+        os.makedirs(default_dir, exist_ok=True)
+        # Preconfigure Chromium preferences to permanently disable password saving & autofill prompts
+        prefs_file = os.path.join(default_dir, "Preferences")
+        pdata = {}
+        if os.path.isfile(prefs_file):
+            try:
+                with open(prefs_file, "r", encoding="utf-8") as pf:
+                    pdata = json.load(pf)
+            except Exception:
+                pdata = {}
+        pdata["credentials_enable_service"] = False
+        if not isinstance(pdata.get("profile"), dict):
+            pdata["profile"] = {}
+        pdata["profile"]["password_manager_enabled"] = False
+        if not isinstance(pdata.get("autofill"), dict):
+            pdata["autofill"] = {}
+        pdata["autofill"]["profile_enabled"] = False
+        pdata["autofill"]["credit_card_enabled"] = False
+        with open(prefs_file, "w", encoding="utf-8") as pf:
+            json.dump(pdata, pf)
     except Exception:
         pass
 
@@ -846,7 +866,10 @@ def launch_desktop_window(url: str):
                     f"--user-data-dir={app_profile}",
                     "--no-first-run",
                     "--no-default-browser-check",
-                    "--disable-features=Translate,OptimizationHints,MediaRouter",
+                    "--disable-features=Translate,OptimizationHints,MediaRouter,PasswordManager,PasswordGeneration,AutofillServerCommunication,AutofillEnableAccountWalletStorage",
+                    "--disable-save-password-bubble",
+                    "--disable-autofill-keyboard-accessory-view",
+                    "--password-store=basic",
                     "--disable-infobars",
                     "--disable-component-update",
                     "--disable-notifications",
@@ -878,11 +901,16 @@ def check_existing_server(port: int = 5432) -> Optional[str]:
 
 
 def run_server(port: int = 5432, open_browser: bool = True):
-    # Check if VaultKey is already running
+    # Check if a healthy VaultKey server is already running
     existing_url = check_existing_server(port)
     if existing_url:
         if open_browser:
-            launch_desktop_window(existing_url)
+            proc = launch_desktop_window(existing_url)
+            if proc:
+                try:
+                    proc.wait()
+                except Exception:
+                    pass
         return
 
     # Try port, or increment if busy
@@ -891,7 +919,7 @@ def run_server(port: int = 5432, open_browser: bool = True):
     actual_port = port
     for i in range(max_attempts):
         try:
-            httpd = HTTPServer(("127.0.0.1", port + i), VaultRequestHandler)
+            httpd = ThreadedVaultServer(("127.0.0.1", port + i), VaultRequestHandler)
             actual_port = port + i
             break
         except OSError:
@@ -902,13 +930,57 @@ def run_server(port: int = 5432, open_browser: bool = True):
 
     url = f"http://127.0.0.1:{actual_port}"
 
-    if open_browser:
-        launch_desktop_window(url)
+    # Start multi-threaded server in a background thread FIRST so it is actively accepting connections
+    server_thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+    server_thread.start()
 
-    try:
-        httpd.serve_forever()
-    except (KeyboardInterrupt, SystemExit):
-        httpd.server_close()
+    # Wait until the HTTP server is confirmed responding with HTTP 200 before launching browser
+    import urllib.request
+    for _ in range(50):
+        try:
+            req = urllib.request.Request(f"{url}/api/health", headers={"User-Agent": "VaultKeyHealthCheck"})
+            with urllib.request.urlopen(req, timeout=0.1) as resp:
+                if resp.status == 200:
+                    break
+        except Exception:
+            time.sleep(0.04)
+
+    # Server is 100% ready; open the desktop window
+    if open_browser:
+        proc = launch_desktop_window(url)
+        if proc:
+            try:
+                proc.wait()
+            except (KeyboardInterrupt, SystemExit):
+                pass
+            except Exception:
+                pass
+            # Window was closed: lock vault and terminate server process cleanly
+            session.vault_fernet = None
+            if SESSION_FILE.is_file():
+                try:
+                    os.remove(SESSION_FILE)
+                except Exception:
+                    pass
+            try:
+                httpd.shutdown()
+            except Exception:
+                pass
+            os._exit(0)
+        else:
+            try:
+                server_thread.join()
+            except (KeyboardInterrupt, SystemExit):
+                session.vault_fernet = None
+                httpd.shutdown()
+                httpd.server_close()
+    else:
+        try:
+            server_thread.join()
+        except (KeyboardInterrupt, SystemExit):
+            session.vault_fernet = None
+            httpd.shutdown()
+            httpd.server_close()
 
 
 if __name__ == "__main__":

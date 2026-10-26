@@ -1157,6 +1157,18 @@ button, input, select, textarea {
     background-color: var(--bg-surface);
 }
 
+/* Prevent browser autofill background/color overrides and autofill styling */
+input:-webkit-autofill,
+input:-webkit-autofill:hover, 
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active,
+textarea:-webkit-autofill,
+select:-webkit-autofill {
+    -webkit-text-fill-color: var(--text-primary) !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--bg-subtle) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+
 .mono-input {
     font-family: var(--font-mono);
 }
@@ -1677,15 +1689,17 @@ tr.draggable-row.is-dragging {
 /* Right-Click Context Menu for Categories */
 .context-menu {
     position: fixed;
-    z-index: 2000;
+    z-index: 10000;
     min-width: 155px;
     background-color: var(--bg-surface);
     border: 1px solid var(--border);
-    border-radius: 5px;
+    border-radius: 6px;
     padding: 4px;
     display: flex;
     flex-direction: column;
     gap: 2px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 2px 6px rgba(0, 0, 0, 0.2);
+    user-select: none;
 }
 
 .context-menu.hidden {
